@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JOS.Files.Implementation.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JOS.Files.Benchmarks", "src\JOS.Files.Benchmarks\JOS.Files.Benchmarks.csproj", "{B63B604C-A4CD-4904-8C16-690511ED33B7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JOS.Files.Functions", "src\JOS.Files.Functions\JOS.Files.Functions.csproj", "{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{B63B604C-A4CD-4904-8C16-690511ED33B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B63B604C-A4CD-4904-8C16-690511ED33B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B63B604C-A4CD-4904-8C16-690511ED33B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +52,7 @@ Global
 		{180FFE60-4415-4BE1-8917-8B04777DE4C5} = {5FC6AFF6-EAE4-41FD-B3B2-1E9A6C787F12}
 		{FF7677C7-064A-41CA-935F-3B1AB09CDF88} = {17EFDD8A-20A4-48BD-B094-A8D951899BFD}
 		{B63B604C-A4CD-4904-8C16-690511ED33B7} = {5FC6AFF6-EAE4-41FD-B3B2-1E9A6C787F12}
+		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C} = {5FC6AFF6-EAE4-41FD-B3B2-1E9A6C787F12}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {12C6B6B4-03FC-48F1-B2FC-004D1C4090AB}
