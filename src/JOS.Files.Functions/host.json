@@ -4,20 +4,12 @@
   "logging": {
     "logLevel": {
       "JOS.Files.Functions": "Information",
-      "Default": "None"
+      "Default": "Error"
     },
     "applicationInsights": {
       "samplingExcludedTypes": "Request",
       "samplingSettings": {
         "isEnabled": true
-      }
-    }
-  },
-  "extensions": {
-    "serviceBus": {
-      "messageHandlerOptions": {
-        "maxAutoRenewDuration": "23:59:59",
-        "maxConcurrentCalls": 1
       }
     }
   }
