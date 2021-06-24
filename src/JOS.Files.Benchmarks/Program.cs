@@ -6,7 +6,8 @@ namespace JOS.Files.Benchmarks
     {
         static void Main(string[] args)
         {
-            var summary1 = BenchmarkRunner.Run<FileUploadBenchmark>();
+            //var summary1 = BenchmarkRunner.Run<FileUploadBenchmark>();
+            var summary = BenchmarkRunner.Run<SortFileBenchmark>();
         }
     }
 }
