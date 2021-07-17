@@ -13,7 +13,7 @@ namespace JOS.Files.Benchmarks
     {
         private InMemorySortFileCommand _inMemorySortFileCommand;
 
-        [GlobalSetup]
+        [GlobalSetup(Target = nameof(SortFile_InMemory))]
         public async Task GlobalSetup()
         {
             _inMemorySortFileCommand = new InMemorySortFileCommand();
@@ -38,7 +38,7 @@ namespace JOS.Files.Benchmarks
         [Arguments(10000000)]
         public async Task SortFile_InMemory(int rows)
         {
-            var file = File.OpenRead($"unsorted.{rows}.txt");
+            var file = File.OpenRead($"unsorted.{rows}.csv");
             await _inMemorySortFileCommand.Execute(file);
         }
     }
