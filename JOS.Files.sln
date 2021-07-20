@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{40D083FE-7
 		zip-functions-benchmarks.md = zip-functions-benchmarks.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JOS.Console.Runner", "test\JOS.Console.Runner\JOS.Console.Runner.csproj", "{BD1741DE-D7A8-4DB9-9540-FCFF8F3BC45C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD1741DE-D7A8-4DB9-9540-FCFF8F3BC45C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD1741DE-D7A8-4DB9-9540-FCFF8F3BC45C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD1741DE-D7A8-4DB9-9540-FCFF8F3BC45C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD1741DE-D7A8-4DB9-9540-FCFF8F3BC45C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,6 +64,7 @@ Global
 		{FF7677C7-064A-41CA-935F-3B1AB09CDF88} = {17EFDD8A-20A4-48BD-B094-A8D951899BFD}
 		{B63B604C-A4CD-4904-8C16-690511ED33B7} = {5FC6AFF6-EAE4-41FD-B3B2-1E9A6C787F12}
 		{229B3BD8-DCB6-4F04-B7F6-7F5C0BDDD71C} = {5FC6AFF6-EAE4-41FD-B3B2-1E9A6C787F12}
+		{BD1741DE-D7A8-4DB9-9540-FCFF8F3BC45C} = {17EFDD8A-20A4-48BD-B094-A8D951899BFD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {12C6B6B4-03FC-48F1-B2FC-004D1C4090AB}

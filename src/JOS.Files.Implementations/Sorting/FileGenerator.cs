@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Bogus;
 using CsvHelper;
@@ -10,6 +11,7 @@ namespace JOS.Files.Implementations.Sorting
 {
     public static class FileGenerator
     {
+        public static string FileLocation = "c:\\temp\\files";
         private static readonly Faker<User> UserGenerator;
 
         static FileGenerator()
@@ -24,11 +26,13 @@ namespace JOS.Files.Implementations.Sorting
                 .RuleFor(u => u.SomeGuid, Guid.NewGuid);
         }
 
-        public static async Task<string> CreateFile(int rows)
+        public static async Task<string> CreateFile(int rows, string location = "")
         {
             var filename = $"unsorted.{rows}.csv";
-            await using var writer = new StreamWriter(filename, append: false);
+            var path = string.IsNullOrWhiteSpace(location) ? filename : Path.Combine(location, filename);
+            await using var writer = new StreamWriter(path, append: false, Encoding.UTF8, 100 * 1024 * 1024);
             await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
             for (var i = 0; i < rows; i++)
             {
                 var user = UserGenerator.Generate();
