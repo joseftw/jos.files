@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using JOS.Files.Implementations.Sorting;
@@ -9,23 +10,28 @@ namespace JOS.Console.Runner
     {
         public static async Task Main(string[] args)
         {
-            var rows = 100_000_00;
-            var unsortedFile = $"unsorted.{rows}.csv";
+            var rows = 1_000_000;
+            var sourceFilename = $"unsorted.{rows}.csv";
             var sortCommand = new ExternalMergeSortFileCommand();
-
-            if (!File.Exists(Path.Combine(FileGenerator.FileLocation, unsortedFile)))
+            var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);
+            if (!File.Exists(unsortedFilePath))
             {
-                System.Console.WriteLine($"{unsortedFile} does not exists, creating...");
+                System.Console.WriteLine($"{sourceFilename} does not exists, creating...");
                 await FileGenerator.CreateFile(rows, FileGenerator.FileLocation);
-                System.Console.WriteLine($"{unsortedFile} has been created");
+                System.Console.WriteLine($"{sourceFilename} has been created");
             }
 
-            var filePath = Path.Combine(FileGenerator.FileLocation, unsortedFile);
-            System.Console.WriteLine($"Starting to sort {unsortedFile}...");
+            var sourceFile = Path.Combine(FileGenerator.FileLocation, sourceFilename);
+            var targetFile = File.OpenWrite(Path.Combine(FileGenerator.FileLocation, $"sorted.{rows}.csv"));
+            System.Console.WriteLine($"Starting to sort {sourceFilename}...");
             var stopwatch = Stopwatch.StartNew();
-            await sortCommand.Execute(File.OpenRead(filePath));
+            await sortCommand.Execute(File.OpenRead(sourceFile), targetFile);
             stopwatch.Stop();
             System.Console.WriteLine($"Done, took {stopwatch.Elapsed}");
+
+            var unsortedRows = await File.ReadAllLinesAsync(unsortedFilePath);
+            Array.Sort(unsortedRows);
+            await File.WriteAllLinesAsync(Path.Combine(FileGenerator.FileLocation, "sorted.source.csv"), unsortedRows);
         }
     }
 }

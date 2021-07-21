@@ -5,6 +5,6 @@ namespace JOS.Files.Implementations.Sorting
 {
     public interface ISortFileCommand
     {
-        Task Execute(Stream file);
+        Task Execute(Stream source, Stream target);
     }
 }

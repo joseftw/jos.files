@@ -40,8 +40,9 @@ namespace JOS.Files.Benchmarks
         [Arguments(10000000)]
         public async Task InMemory(int rows)
         {
-            var file = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
-            await _inMemorySortFileCommand.Execute(file);
+            var source = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
+            var target = File.OpenWrite($"c:\\temp\\files\\sorted.{rows}.csv");
+            await _inMemorySortFileCommand.Execute(source, target);
         }
 
         [Benchmark]
@@ -54,8 +55,9 @@ namespace JOS.Files.Benchmarks
         [Arguments(10000000)]
         public async Task ExternalMergeSort(int rows)
         {
-            var file = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
-            await _externalMergeSortFileCommand.Execute(file);
+            var source = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
+            var target = File.OpenWrite($"c:\\temp\\files\\sorted.{rows}.csv");
+            await _externalMergeSortFileCommand.Execute(source, target);
         }
     }
 }

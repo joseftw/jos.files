@@ -7,17 +7,16 @@ namespace JOS.Files.Implementations.Sorting
 {
     public class InMemorySortFileCommand : ISortFileCommand
     {
-        public async Task Execute(Stream file)
+        public async Task Execute(Stream source, Stream target)
         {
-            using var streamReader = new StreamReader(file);
+            using var streamReader = new StreamReader(source);
             var lines = new List<string>();
             while (!streamReader.EndOfStream)
             {
                 lines.Add(await streamReader.ReadLineAsync());
             }
 
-            await using var sortedFile = File.OpenWrite("sorted.txt");
-            await using var streamWriter = new StreamWriter(sortedFile);
+            await using var streamWriter = new StreamWriter(target);
             foreach (var line in lines.OrderBy(x => x))
             {
                 await streamWriter.WriteLineAsync(line);

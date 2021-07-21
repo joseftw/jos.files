@@ -30,7 +30,7 @@ namespace JOS.Files.Implementations.Sorting
         {
             var filename = $"unsorted.{rows}.csv";
             var path = string.IsNullOrWhiteSpace(location) ? filename : Path.Combine(location, filename);
-            await using var writer = new StreamWriter(path, append: false, Encoding.UTF8, 100 * 1024 * 1024);
+            await using var writer = new StreamWriter(path, append: false);
             await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
             for (var i = 0; i < rows; i++)
@@ -39,6 +39,9 @@ namespace JOS.Files.Implementations.Sorting
                 csv.WriteRecord(user);
                 await csv.NextRecordAsync();
             }
+
+            await csv.DisposeAsync();
+            await writer.DisposeAsync();
 
             return filename;
         }

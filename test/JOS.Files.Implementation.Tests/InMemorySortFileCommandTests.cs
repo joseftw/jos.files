@@ -20,9 +20,10 @@ namespace JOS.Files.Implementation.Tests
         [Fact]
         public async Task ShouldSortFileInAscendingOrder()
         {
-            var unsortedFile = File.OpenRead("unsorted.txt");
+            var source = File.OpenRead("unsorted.txt");
+            var target = File.OpenWrite("sorted.txt");
 
-            await _sut.Execute(unsortedFile);
+            await _sut.Execute(source, target);
             using var streamReader = new StreamReader(File.OpenRead("sorted.txt"));
             var lines = new List<string>();
             while (!streamReader.EndOfStream)

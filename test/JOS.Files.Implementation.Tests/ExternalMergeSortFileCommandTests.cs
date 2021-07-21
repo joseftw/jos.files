@@ -36,9 +36,9 @@ namespace JOS.Files.Implementation.Tests
         [Fact]
         public async Task Hej()
         {
-            var fileStream = File.OpenRead(Filename);
-
-            await _sut.Execute(fileStream);
+            var source = File.OpenRead(Filename);
+            var target = File.OpenWrite("sorted.csv");
+            await _sut.Execute(source, target);
         }
     }
 }
