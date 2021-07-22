@@ -10,7 +10,7 @@ namespace JOS.Console.Runner
     {
         public static async Task Main(string[] args)
         {
-            var rows = 1_000_000;
+            var rows = 1_000_000_00;
             var sourceFilename = $"unsorted.{rows}.csv";
             var sortCommand = new ExternalMergeSortFileCommand();
             var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);
@@ -27,11 +27,15 @@ namespace JOS.Console.Runner
             var stopwatch = Stopwatch.StartNew();
             await sortCommand.Execute(File.OpenRead(sourceFile), targetFile);
             stopwatch.Stop();
-            System.Console.WriteLine($"Done, took {stopwatch.Elapsed}");
+            System.Console.WriteLine($"MergeSort done, took {stopwatch.Elapsed}");
 
+            System.Console.WriteLine("Starting to sort In-memory...");
+            stopwatch.Restart();
             var unsortedRows = await File.ReadAllLinesAsync(unsortedFilePath);
             Array.Sort(unsortedRows);
-            await File.WriteAllLinesAsync(Path.Combine(FileGenerator.FileLocation, "sorted.source.csv"), unsortedRows);
+            await File.WriteAllLinesAsync(Path.Combine(FileGenerator.FileLocation, "sorted.inmemory.csv"), unsortedRows);
+            stopwatch.Stop();
+            System.Console.WriteLine($"In-memory done, took {stopwatch.Elapsed}");
         }
     }
 }

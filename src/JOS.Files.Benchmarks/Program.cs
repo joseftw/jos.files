@@ -1,12 +1,21 @@
-﻿using BenchmarkDotNet.Running;
+﻿using System.Threading.Tasks;
+using BenchmarkDotNet.Running;
+using JOS.Files.Implementations.Sorting;
 
 namespace JOS.Files.Benchmarks
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            //var summary1 = BenchmarkRunner.Run<FileUploadBenchmark>();
+            await FileGenerator.CreateFile(10);
+            await FileGenerator.CreateFile(100);
+            await FileGenerator.CreateFile(1000);
+            await FileGenerator.CreateFile(10000);
+            await FileGenerator.CreateFile(100000);
+            await FileGenerator.CreateFile(1000000);
+            await FileGenerator.CreateFile(10000000);
+
             var summary = BenchmarkRunner.Run<SortFileBenchmark>();
         }
     }

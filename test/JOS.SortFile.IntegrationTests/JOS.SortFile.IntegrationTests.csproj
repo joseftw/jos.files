@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
+
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -21,14 +21,9 @@
         </PackageReference>
     </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\JOS.Files.Implementations\JOS.Files.Implementations.csproj" />
-    </ItemGroup>
 
     <ItemGroup>
-        <None Update="unsorted.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+        <ProjectReference Include="..\..\src\JOS.Files.Implementations\JOS.Files.Implementations.csproj" />
     </ItemGroup>
 
 </Project>

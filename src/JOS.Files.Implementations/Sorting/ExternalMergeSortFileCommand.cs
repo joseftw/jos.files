@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,30 +9,28 @@ namespace JOS.Files.Implementations.Sorting
 {
     public class ExternalMergeSortFileCommand : ISortFileCommand
     {
-        private const string FileLocation = "c:\\temp\\files";
+        private readonly ExternalMergeSortOptions _options;
         private const string UnsortedFileExtension = ".unsorted";
-        public async Task Execute(Stream source, Stream target)
+
+        public ExternalMergeSortFileCommand() : this(new ExternalMergeSortOptions()) {}
+
+        public ExternalMergeSortFileCommand(ExternalMergeSortOptions options)
         {
-            var files = await SplitFile(source, 16);
-            var sortedFiles = await SortFiles(files);
-            var mergedFiles = await MergeFiles(sortedFiles, target);
-            var finalFile = mergedFiles.First();
-            var rows = File.OpenRead(GetPath(finalFile));
-            var rowCount = 0;
-            using (var streamReader = new StreamReader(rows))
-            {
-                while (!streamReader.EndOfStream)
-                {
-                    await streamReader.ReadLineAsync();
-                    rowCount++;
-                }
-            }
-            Console.WriteLine($"Total lines: {rowCount}");
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public static async Task<IReadOnlyCollection<string>> SplitFile(Stream file, int chunkSizeMb, char newLineSeparator = '\n')
+        public async Task Execute(Stream source, Stream target)
         {
-            var chunkSize = chunkSizeMb * 1024 * 1024;
+            var files = await SplitFile(source);
+            var sortedFiles = await SortFiles(files);
+            _ = await MergeFiles(sortedFiles);
+            // TEMPORARY
+            await target.DisposeAsync();
+        }
+
+        private async Task<IReadOnlyCollection<string>> SplitFile(Stream file, int? chunkSizeMb = null, char newLineSeparator = '\n')
+        {
+            var chunkSize = (chunkSizeMb ?? _options.Split.ChunkSizeMb) * 1024 * 1024;
             var buffer = new byte[chunkSize];
             var extraBuffer = new List<byte>();
             var filenames = new List<string>();
@@ -57,8 +56,6 @@ namespace JOS.Files.Implementations.Sorting
 
                     var extraByte = buffer[chunkSize - 1];
 
-                    // TODO IMPROVE, if extra bytes, append to last string in buffer.
-                    // THEN SORT HERE.
                     while (extraByte != newLineSeparator)
                     {
                         var flag = file.ReadByte();
@@ -71,14 +68,13 @@ namespace JOS.Files.Implementations.Sorting
                     }
 
                     var filename = $"{++index}.unsorted";
-                    await using var unsortedFile = File.Create(Path.Combine(FileLocation, filename));
+                    await using var unsortedFile = File.Create(Path.Combine(_options.FileLocation, filename));
                     await unsortedFile.WriteAsync(buffer, 0, chunkBytesRead);
                     if (extraBuffer.Count > 0)
                     {
                         await unsortedFile.WriteAsync(extraBuffer.ToArray(), 0, extraBuffer.Count);
                     }
                     filenames.Add(filename);
-                    Console.WriteLine($"Created {filename}...");
 
                     extraBuffer.Clear();
                 }
@@ -87,63 +83,64 @@ namespace JOS.Files.Implementations.Sorting
             }
         }
 
-        private static async Task<IReadOnlyCollection<string>> SortFiles(IReadOnlyCollection<string> files)
+        private async Task<IReadOnlyCollection<string>> SortFiles(IReadOnlyCollection<string> files)
         {
             var sortedFiles = new List<string>(files.Count);
             foreach (var filename in files)
             {
-                var rows = await File.ReadAllLinesAsync(Path.Combine(FileLocation, filename));
-                Array.Sort(rows);
+                var rows = await File.ReadAllLinesAsync(Path.Combine(_options.FileLocation, filename));
+                Array.Sort(rows, _options.Sort.Comparer);
                 var sortedFilename = filename.Replace(UnsortedFileExtension, ".sorted");
-                await File.WriteAllLinesAsync(Path.Combine(FileLocation, sortedFilename), rows);
-                Console.WriteLine($"Created {sortedFilename}...");
-                File.Delete(Path.Combine(FileLocation, filename));
+                await File.WriteAllLinesAsync(Path.Combine(_options.FileLocation, sortedFilename), rows);
+                File.Delete(Path.Combine(_options.FileLocation, filename));
                 sortedFiles.Add(sortedFilename);
-                rows = null;
-                GC.Collect();
             }
 
             return sortedFiles;
         }
 
-        private static async Task<IReadOnlyCollection<string>> MergeFiles(IReadOnlyCollection<string> sortedFiles, Stream target)
+        private async Task<string> MergeFiles(IReadOnlyCollection<string> sourceFiles)
         {
-            var chunkSize = 10;
-            var chunks = sortedFiles.Chunk(chunkSize).ToList();
+            var chunkSize = _options.Merge.ChunkSize;
+            var chunks = sourceFiles.Chunk(chunkSize);
             var chunkedCounter = 0;
             foreach (var files in chunks)
             {
+                var outputFilename = $"{++chunkedCounter}.sorted.tmp";
+                if (files.Length == 1)
+                {
+                    Console.WriteLine("ONE FILE");
+                    HandleSingleFile(files.First(), outputFilename);
+                    continue;
+                }
+
                 var streamReaders = new StreamReader[files.Length];
-                var rows = new List<(string Value, int StreamReader)>(files.Length);
+                var rows = new List<Row>(files.Length);
                 for (var i = 0; i < files.Length; i++)
                 {
                     var path = GetPath(files[i]);
                     streamReaders[i] = new StreamReader(File.OpenRead(path), bufferSize: 65536);
                     var value = await streamReaders[i].ReadLineAsync();
-                    rows.Add((value, i));
+                    var row = new Row
+                    {
+                        Value = value,
+                        StreamReader = i
+                    };
+                    rows.Add(row);
                 }
 
-                var outputFilename = $"{++chunkedCounter}.sorted.tmp";
-                var chunkedOutputFile = sortedFiles.Count > 1 
-                    ? File.OpenWrite(GetPath(outputFilename))
-                    : target;
-                var rowsWritten = 0;
+                var outputStream = File.OpenWrite(GetPath(outputFilename));
                 var finishedStreamReaders = new List<int>();
                 var done = false;
-                await using (var outputWriter = new StreamWriter(chunkedOutputFile, bufferSize: 65536))
+                await using (var outputWriter = new StreamWriter(outputStream, bufferSize: 65536))
                 {
-                    // TODO Improve if only 1 streamreader
                     while (!done)
                     {
-                        if (rows.Count > 1)
-                        {
-                            rows.Sort();
-                        }
+                        rows.Sort((row1, row2) => _options.Sort.Comparer.Compare(row1.Value, row2.Value));
                         var valueToWrite = rows[0].Value;
                         var streamReaderIndex = rows[0].StreamReader;
                         await outputWriter.WriteLineAsync(valueToWrite);
-                        Console.WriteLine($"Rows written: {++rowsWritten}");
-                        
+
                         if (streamReaders[streamReaderIndex].EndOfStream)
                         {
                             var indexToRemove = rows.FindIndex(x => x.StreamReader == streamReaderIndex);
@@ -153,43 +150,84 @@ namespace JOS.Files.Implementations.Sorting
                             continue;
                         }
 
-                        var streamReader = streamReaders[streamReaderIndex];
-
-                        var value = await streamReader.ReadLineAsync();
-                        rows[0] = (value, streamReaderIndex);
+                        var value = await streamReaders[streamReaderIndex].ReadLineAsync();
+                        rows[0] = new Row { Value = value, StreamReader = streamReaderIndex };
                     }
-                }
-                
-                foreach (var streamReader in streamReaders)
-                {
-                    streamReader.Dispose();
+
+                    await outputWriter.FlushAsync();
                 }
 
-                foreach (var file in files)
+                for (var i = 0; i < streamReaders.Length; i++)
                 {
-                    var path = GetPath(file);
-                    File.Delete(path);
+                    streamReaders[i].Dispose();
+                    // RENAME BEFORE DELETION SINCE DELETION OF LARGE FILES CAN TAKE SOME TIME
+                    // WE DONT WANT TO CLASH WHEN WRITING NEW FILES.
+                    var temporaryFilename = $"{files[i]}.removal";
+                    File.Move(GetPath(files[i]), GetPath(temporaryFilename));
+                    File.Delete(GetPath(temporaryFilename));
                 }
-                File.Move(GetPath(outputFilename), GetPath(outputFilename.Replace(".tmp", string.Empty)));
+
+                File.Move(GetPath(outputFilename), GetPath(outputFilename.Replace(".tmp", string.Empty)), true);
             }
 
-            var chunkedFiles = Directory.GetFiles(FileLocation, "*.sorted");
-            if (chunkedFiles.Length > 1)
+            sourceFiles = Directory.GetFiles(_options.FileLocation, "*.sorted").OrderBy(x =>
             {
-                await MergeFiles(chunkedFiles, target);
+                var filename = Path.GetFileNameWithoutExtension(x);
+                return int.Parse(filename);
+            }).ToList();
+
+            if (sourceFiles.Count > 1)
+            {
+                await MergeFiles(sourceFiles);
             }
-;
-            return chunkedFiles;
+
+            return sourceFiles.First();
         }
 
-        private static async Task<string> SortFile(IReadOnlyCollection<string> mergedFiles)
+        private string GetPath(string filename)
         {
-            return string.Empty;
+            return Path.Combine(_options.FileLocation, filename);
         }
 
-        private static string GetPath(string filename)
+        private void HandleSingleFile(string filename, string outputFilename)
         {
-            return Path.Combine(FileLocation, filename);
+            File.Move(GetPath(filename), GetPath(outputFilename.Replace(".tmp", string.Empty)));
         }
+    }
+
+    public class ExternalMergeSortOptions
+    {
+        public ExternalMergeSortOptions()
+        {
+            Split = new ExternalMergeSortSplitOptions();
+            Sort = new ExternalMergeSortSortOptions();
+            Merge = new ExternalMergeSortMergeOptions();
+        }
+
+        public string FileLocation { get; init; } = "c:\\temp\\files";
+        public ExternalMergeSortSplitOptions Split { get; init; }
+        public ExternalMergeSortSortOptions Sort { get; init; }
+        public ExternalMergeSortMergeOptions Merge { get; init; }
+    }
+
+    public class ExternalMergeSortSplitOptions
+    {
+        public int ChunkSizeMb { get; init; } = 1;
+    }
+
+    public class ExternalMergeSortSortOptions
+    {
+        public IComparer Comparer { get; init; } = Comparer<string>.Default;
+    }
+
+    public class ExternalMergeSortMergeOptions
+    {
+        public int ChunkSize { get; init; } = 10;
+    }
+
+    internal readonly struct Row
+    {
+        public string Value { get; init; }
+        public int StreamReader { get; init; }
     }
 }

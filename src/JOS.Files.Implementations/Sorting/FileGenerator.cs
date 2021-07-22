@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Bogus;
@@ -26,17 +27,26 @@ namespace JOS.Files.Implementations.Sorting
                 .RuleFor(u => u.SomeGuid, Guid.NewGuid);
         }
 
-        public static async Task<string> CreateFile(int rows, string location = "")
+        public static async Task<string> CreateFile(int rows, string location = "", bool overwrite = false)
         {
             var filename = $"unsorted.{rows}.csv";
-            var path = string.IsNullOrWhiteSpace(location) ? filename : Path.Combine(location, filename);
+            var path = string.IsNullOrWhiteSpace(location) ? Path.Combine(FileLocation, filename) : Path.Combine(location, filename);
+            if (!overwrite)
+            {
+                if (File.Exists(path))
+                {
+                    Console.WriteLine($"File '{path}' already exists");
+                    return filename;
+                }
+            }
+
+            Console.WriteLine($"Creating {path}...");
             await using var writer = new StreamWriter(path, append: false);
             await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
-            for (var i = 0; i < rows; i++)
+            for (int i = 0; i < rows; i++)
             {
-                var user = UserGenerator.Generate();
-                csv.WriteRecord(user);
+                csv.WriteRecord(UserGenerator.Generate());
                 await csv.NextRecordAsync();
             }
 
