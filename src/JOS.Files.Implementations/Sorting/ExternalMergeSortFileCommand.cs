@@ -28,7 +28,11 @@ namespace JOS.Files.Implementations.Sorting
             await target.DisposeAsync();
         }
 
-        private async Task<IReadOnlyCollection<string>> SplitFile(Stream file, int? chunkSizeMb = null, char newLineSeparator = '\n')
+        private async Task<IReadOnlyCollection<string>> SplitFile(
+            Stream file,
+            int? chunkSizeMb = null,
+            char newLineSeparator = '\n',
+            IProgress<int> progress = default)
         {
             var chunkSize = (chunkSizeMb ?? _options.Split.ChunkSizeMb) * 1024 * 1024;
             var buffer = new byte[chunkSize];
@@ -75,7 +79,6 @@ namespace JOS.Files.Implementations.Sorting
                         await unsortedFile.WriteAsync(extraBuffer.ToArray(), 0, extraBuffer.Count);
                     }
                     filenames.Add(filename);
-
                     extraBuffer.Clear();
                 }
 
@@ -104,31 +107,17 @@ namespace JOS.Files.Implementations.Sorting
             var chunkSize = _options.Merge.ChunkSize;
             var chunks = sourceFiles.Chunk(chunkSize);
             var chunkedCounter = 0;
+            var finalRun = sourceFiles.Count <= chunkSize;
             foreach (var files in chunks)
             {
                 var outputFilename = $"{++chunkedCounter}.sorted.tmp";
                 if (files.Length == 1)
                 {
-                    Console.WriteLine("ONE FILE");
                     HandleSingleFile(files.First(), outputFilename);
                     continue;
                 }
 
-                var streamReaders = new StreamReader[files.Length];
-                var rows = new List<Row>(files.Length);
-                for (var i = 0; i < files.Length; i++)
-                {
-                    var path = GetPath(files[i]);
-                    streamReaders[i] = new StreamReader(File.OpenRead(path), bufferSize: 65536);
-                    var value = await streamReaders[i].ReadLineAsync();
-                    var row = new Row
-                    {
-                        Value = value,
-                        StreamReader = i
-                    };
-                    rows.Add(row);
-                }
-
+                var (streamReaders, rows) = await GetStreamReaders(files);
                 var outputStream = File.OpenWrite(GetPath(outputFilename));
                 var finishedStreamReaders = new List<int>();
                 var done = false;
@@ -184,6 +173,26 @@ namespace JOS.Files.Implementations.Sorting
             return sourceFiles.First();
         }
 
+        private async Task<(StreamReader[] StreamReaders, List<Row> rows)> GetStreamReaders(string[] files)
+        {
+            var streamReaders = new StreamReader[files.Length];
+            var rows = new List<Row>(files.Length);
+            for (var i = 0; i < files.Length; i++)
+            {
+                var path = GetPath(files[i]);
+                streamReaders[i] = new StreamReader(File.OpenRead(path), bufferSize: 65536);
+                var value = await streamReaders[i].ReadLineAsync();
+                var row = new Row
+                {
+                    Value = value,
+                    StreamReader = i
+                };
+                rows.Add(row);
+            }
+
+            return (streamReaders, rows);
+        }
+
         private string GetPath(string filename)
         {
             return Path.Combine(_options.FileLocation, filename);
@@ -212,7 +221,7 @@ namespace JOS.Files.Implementations.Sorting
 
     public class ExternalMergeSortSplitOptions
     {
-        public int ChunkSizeMb { get; init; } = 1;
+        public int ChunkSizeMb { get; init; } = 2;
     }
 
     public class ExternalMergeSortSortOptions
