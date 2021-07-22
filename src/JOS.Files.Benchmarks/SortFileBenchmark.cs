@@ -82,42 +82,20 @@ namespace JOS.Files.Benchmarks
         //    await _externalMergeSortFileCommand.Execute(source, target);
         //}
 
-        //[Benchmark]
-        //[Arguments(1)]
-        //[Arguments(2)]
-        //[Arguments(4)]
-        //[Arguments(8)]
-        //[Arguments(16)]
-        //[Arguments(32)]
-        //[Arguments(64)]
-        //[Arguments(128)]
-        //public async Task ChunkSize(int chunkSize)
-        //{
-        //    var command = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions
-        //    {
-        //        Split = new ExternalMergeSortSplitOptions
-        //        {
-        //            ChunkSizeMb = chunkSize
-        //        }
-        //    });
-        //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");
-        //    var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{1000000}.csv");
-        //    await command.Execute(source, target);
-        //}
-
         [Benchmark]
-        [Arguments(5)]
-        [Arguments(10)]
-        [Arguments(15)]
-        public async Task Runs(int chunkSize)
+        [Arguments(1)]
+        [Arguments(2)]
+        [Arguments(4)]
+        [Arguments(8)]
+        [Arguments(16)]
+        [Arguments(32)]
+        [Arguments(64)]
+        [Arguments(128)]
+        public async Task ChunkSize(int chunkSize)
         {
             var command = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions
             {
                 Split = new ExternalMergeSortSplitOptions
-                {
-                    ChunkSizeMb = 8
-                },
-                Merge = new ExternalMergeSortMergeOptions
                 {
                     ChunkSize = chunkSize
                 }
@@ -126,5 +104,27 @@ namespace JOS.Files.Benchmarks
             var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{1000000}.csv");
             await command.Execute(source, target);
         }
+
+        //[Benchmark]
+        //[Arguments(5)]
+        //[Arguments(10)]
+        //[Arguments(15)]
+        //public async Task Runs(int chunkSize)
+        //{
+        //    var command = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions
+        //    {
+        //        Split = new ExternalMergeSortSplitOptions
+        //        {
+        //            ChunkSize = 8 * 1024 * 1024
+        //        },
+        //        Merge = new ExternalMergeSortMergeOptions
+        //        {
+        //            ChunkSize = chunkSize
+        //        }
+        //    });
+        //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");
+        //    var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{1000000}.csv");
+        //    await command.Execute(source, target);
+        //}
     }
 }

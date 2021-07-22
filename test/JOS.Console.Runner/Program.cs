@@ -10,7 +10,7 @@ namespace JOS.Console.Runner
     {
         public static async Task Main(string[] args)
         {
-            var rows = 1_000_000_00;
+            var rows = 1_000_000;
             var sourceFilename = $"unsorted.{rows}.csv";
             var sortCommand = new ExternalMergeSortFileCommand();
             var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);

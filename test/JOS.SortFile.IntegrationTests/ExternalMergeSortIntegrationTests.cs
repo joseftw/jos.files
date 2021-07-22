@@ -27,23 +27,25 @@ namespace JOS.SortFile.IntegrationTests
         [InlineData(1000000)]
         public async Task FileSortedWithExternalMergeSortCommandShouldBeIdenticalToFileSortedWithArraySort(int rows)
         {
-            var filename = _fixture.Files[rows];
-            var fileFullPath = Path.Combine(_fixture.FilesDirectory, filename);
-            var source = File.OpenRead(fileFullPath);
+            var sourceFilename = _fixture.Files[rows];
+            var sourceFullPath = Path.Combine(_fixture.FilesDirectory, sourceFilename);
+            var sourceStream = File.OpenRead(sourceFullPath);
+            var targetFilename = $"{rows}.done";
+            var targetFullPath = Path.Combine(_fixture.FilesDirectory, targetFilename);
+            var target = File.OpenWrite(targetFullPath);
 
-            await _sut.Execute(source, new MemoryStream()); // TODO FIX
-            var unsortedFileRows = await File.ReadAllLinesAsync(fileFullPath);
+            await _sut.Execute(sourceStream, target);
+            var unsortedFileRows = await File.ReadAllLinesAsync(sourceFullPath);
             Array.Sort(unsortedFileRows);
             var arraySortedFilePath = Path.Combine(_fixture.FilesDirectory, "inmemory-sorted");
-            var mergeSortedFilePath = Path.Combine(_fixture.FilesDirectory, "1.sorted");
             await File.WriteAllLinesAsync(arraySortedFilePath, unsortedFileRows);
-            await using var mergeSortedFile = File.OpenRead(mergeSortedFilePath);
+            await using var mergeSortedFile = File.OpenRead(targetFullPath);
             await using var arraySortedFile = File.OpenRead(arraySortedFilePath);
             var filesAreEqual = FileComparer.FilesAreEqual(mergeSortedFile, arraySortedFile);
 
             filesAreEqual.ShouldBeTrue();
             File.Delete(arraySortedFilePath);
-            File.Delete(mergeSortedFilePath);
+            File.Delete(targetFullPath);
         }
     }
 
