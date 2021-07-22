@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using JOS.Files.Implementations.Sorting;
 
@@ -25,7 +26,7 @@ namespace JOS.Console.Runner
             var targetFile = File.OpenWrite(Path.Combine(FileGenerator.FileLocation, $"sorted.{rows}.csv"));
             System.Console.WriteLine($"Starting to sort {sourceFilename}...");
             var stopwatch = Stopwatch.StartNew();
-            await sortCommand.Execute(File.OpenRead(sourceFile), targetFile);
+            await sortCommand.Execute(File.OpenRead(sourceFile), targetFile, CancellationToken.None);
             stopwatch.Stop();
             System.Console.WriteLine($"MergeSort done, took {stopwatch.Elapsed}");
 

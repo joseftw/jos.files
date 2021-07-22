@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -83,33 +85,33 @@ namespace JOS.Files.Benchmarks
         //}
 
         [Benchmark]
-        [Arguments(1)]
-        [Arguments(2)]
-        [Arguments(4)]
-        [Arguments(8)]
-        [Arguments(16)]
-        [Arguments(32)]
-        [Arguments(64)]
-        [Arguments(128)]
-        public async Task ChunkSize(int chunkSize)
+        [Arguments(1 * 1024 * 1024)]
+        [Arguments(2 * 1024 * 1024)]
+        [Arguments(4 * 1024 * 1024)]
+        [Arguments(8 * 1024 * 1024)]
+        [Arguments(16 * 1024 * 1024)]
+        [Arguments(32 * 1024 * 1024)]
+        [Arguments(64 * 1024 * 1024)]
+        [Arguments(128 * 1024 * 1024)]
+        public async Task ChunkSize(int chunkSizeBytes)
         {
             var command = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions
             {
                 Split = new ExternalMergeSortSplitOptions
                 {
-                    ChunkSize = chunkSize
+                    ChunkSize = chunkSizeBytes
                 }
             });
             var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");
-            var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{1000000}.csv");
-            await command.Execute(source, target);
+            var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{1000000}.{Guid.NewGuid()}.benchmark");
+            await command.Execute(source, target, CancellationToken.None);
         }
 
         //[Benchmark]
         //[Arguments(5)]
         //[Arguments(10)]
         //[Arguments(15)]
-        //public async Task Runs(int chunkSize)
+        //public async Task Runs(int chunkSizeBytes)
         //{
         //    var command = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions
         //    {
@@ -119,7 +121,7 @@ namespace JOS.Files.Benchmarks
         //        },
         //        Merge = new ExternalMergeSortMergeOptions
         //        {
-        //            ChunkSize = chunkSize
+        //            ChunkSize = chunkSizeBytes
         //        }
         //    });
         //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");

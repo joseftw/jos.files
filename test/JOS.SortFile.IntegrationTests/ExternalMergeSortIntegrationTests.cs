@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using JOS.Files.Implementations.Sorting;
 using Shouldly;
@@ -30,19 +31,21 @@ namespace JOS.SortFile.IntegrationTests
             var sourceFilename = _fixture.Files[rows];
             var sourceFullPath = Path.Combine(_fixture.FilesDirectory, sourceFilename);
             var sourceStream = File.OpenRead(sourceFullPath);
+            var unsortedFileSize = sourceStream.Length;
             var targetFilename = $"{rows}.done";
             var targetFullPath = Path.Combine(_fixture.FilesDirectory, targetFilename);
             var target = File.OpenWrite(targetFullPath);
 
-            await _sut.Execute(sourceStream, target);
+            await _sut.Execute(sourceStream, target, CancellationToken.None);
             var unsortedFileRows = await File.ReadAllLinesAsync(sourceFullPath);
             Array.Sort(unsortedFileRows);
             var arraySortedFilePath = Path.Combine(_fixture.FilesDirectory, "inmemory-sorted");
             await File.WriteAllLinesAsync(arraySortedFilePath, unsortedFileRows);
             await using var mergeSortedFile = File.OpenRead(targetFullPath);
             await using var arraySortedFile = File.OpenRead(arraySortedFilePath);
-            var filesAreEqual = FileComparer.FilesAreEqual(mergeSortedFile, arraySortedFile);
 
+            mergeSortedFile.Length.ShouldBe(unsortedFileSize);
+            var filesAreEqual = FileComparer.FilesAreEqual(mergeSortedFile, arraySortedFile);
             filesAreEqual.ShouldBeTrue();
             File.Delete(arraySortedFilePath);
             File.Delete(targetFullPath);
@@ -66,20 +69,27 @@ namespace JOS.SortFile.IntegrationTests
         [InlineData(100000000)]
         public async Task FileSortedWithExternalMergeSortCommandShouldBeIdenticalToFileSortedWithArraySort(int rows)
         {
-            var filename = _fixture.Files[rows];
-            var fileFullPath = Path.Combine(_fixture.FilesDirectory, filename);
-            var source = File.OpenRead(fileFullPath);
+            var sourceFilename = _fixture.Files[rows];
+            var sourceFullPath = Path.Combine(_fixture.FilesDirectory, sourceFilename);
+            var sourceStream = File.OpenRead(sourceFullPath);
+            var unsortedFileSize = sourceStream.Length;
+            var targetFilename = $"{rows}.done";
+            var targetFullPath = Path.Combine(_fixture.FilesDirectory, targetFilename);
+            var target = File.OpenWrite(targetFullPath);
 
-            await _sut.Execute(source, new MemoryStream()); // TODO FIX
-            var unsortedFileRows = await File.ReadAllLinesAsync(fileFullPath);
+            await _sut.Execute(sourceStream, target, CancellationToken.None);
+            var unsortedFileRows = await File.ReadAllLinesAsync(sourceFullPath);
             Array.Sort(unsortedFileRows);
             var arraySortedFilePath = Path.Combine(_fixture.FilesDirectory, "inmemory-sorted");
             await File.WriteAllLinesAsync(arraySortedFilePath, unsortedFileRows);
-            var mergeSortedFile = File.OpenRead(Path.Combine(_fixture.FilesDirectory, "1.sorted"));
-            var arraySortedFile = File.OpenRead(arraySortedFilePath);
-            var filesAreEqual = FileComparer.FilesAreEqual(mergeSortedFile, arraySortedFile);
+            await using var mergeSortedFile = File.OpenRead(targetFullPath);
+            await using var arraySortedFile = File.OpenRead(arraySortedFilePath);
 
+            mergeSortedFile.Length.ShouldBe(unsortedFileSize);
+            var filesAreEqual = FileComparer.FilesAreEqual(mergeSortedFile, arraySortedFile);
             filesAreEqual.ShouldBeTrue();
+            File.Delete(arraySortedFilePath);
+            File.Delete(targetFullPath);
         }
     }
 }

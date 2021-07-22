@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JOS.Files.Implementations.Sorting
@@ -12,6 +12,7 @@ namespace JOS.Files.Implementations.Sorting
         private readonly ExternalMergeSortOptions _options;
         private const string UnsortedFileExtension = ".unsorted";
         private const string SortedFileExtension = ".sorted";
+        private const string TempFileExtension = ".tmp";
 
         public ExternalMergeSortFileCommand() : this(new ExternalMergeSortOptions()) { }
 
@@ -20,9 +21,9 @@ namespace JOS.Files.Implementations.Sorting
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public async Task Execute(Stream source, Stream target)
+        public async Task Execute(Stream source, Stream target, CancellationToken cancellationToken)
         {
-            var files = await SplitFile(source);
+            var files = await SplitFile(source, cancellationToken);
 
             if (files.Count == 1)
             {
@@ -40,16 +41,15 @@ namespace JOS.Files.Implementations.Sorting
             }
 
             var sortedFiles = await SortFiles(files);
-            await MergeFiles(sortedFiles, target);
+            await MergeFiles(sortedFiles, target, cancellationToken);
         }
 
         private async Task<IReadOnlyCollection<string>> SplitFile(
             Stream file,
-            int? chunkSizeInBytes = null,
-            char newLineSeparator = '\n',
+            CancellationToken cancellationToken,
             IProgress<int> progress = default)
         {
-            var chunkSize = chunkSizeInBytes ?? _options.Split.ChunkSize;
+            var chunkSize = _options.Split.ChunkSize;
             var buffer = new byte[chunkSize];
             var extraBuffer = new List<byte>();
             var filenames = new List<string>();
@@ -63,7 +63,7 @@ namespace JOS.Files.Implementations.Sorting
                     {
                         var bytesRead = await file.ReadAsync(buffer,
                             chunkBytesRead,
-                            chunkSize - chunkBytesRead);
+                            chunkSize - chunkBytesRead, cancellationToken);
 
                         if (bytesRead == 0)
                         {
@@ -75,7 +75,7 @@ namespace JOS.Files.Implementations.Sorting
 
                     var extraByte = buffer[chunkSize - 1];
 
-                    while (extraByte != newLineSeparator)
+                    while (extraByte != _options.Split.NewLineSeparator)
                     {
                         var flag = file.ReadByte();
                         if (flag == -1)
@@ -88,10 +88,10 @@ namespace JOS.Files.Implementations.Sorting
 
                     var filename = $"{++index}.unsorted";
                     await using var unsortedFile = File.Create(Path.Combine(_options.FileLocation, filename));
-                    await unsortedFile.WriteAsync(buffer, 0, chunkBytesRead);
+                    await unsortedFile.WriteAsync(buffer, 0, chunkBytesRead, cancellationToken);
                     if (extraBuffer.Count > 0)
                     {
-                        await unsortedFile.WriteAsync(extraBuffer.ToArray(), 0, extraBuffer.Count);
+                        await unsortedFile.WriteAsync(extraBuffer.ToArray(), 0, extraBuffer.Count, cancellationToken);
                     }
                     filenames.Add(filename);
                     extraBuffer.Clear();
@@ -101,20 +101,13 @@ namespace JOS.Files.Implementations.Sorting
             }
         }
 
-        private async Task<IReadOnlyList<string>> SortFiles(IReadOnlyCollection<string> unsortedFiles)
+        private async Task<IReadOnlyList<string>> SortFiles(
+            IReadOnlyCollection<string> unsortedFiles)
         {
             var sortedFiles = new List<string>(unsortedFiles.Count);
 
             foreach (var unsortedFile in unsortedFiles)
             {
-                //File.ReadAllLinesAsync()
-                //var rows = await File.ReadAllLinesAsync(Path.Combine(_options.FileLocation, unsortedFile));
-                //Array.Sort(rows, _options.Sort.Comparer);
-                //var sortedFilename = unsortedFile.Replace(UnsortedFileExtension, SortedFileExtension);
-                //await File.WriteAllLinesAsync(Path.Combine(_options.FileLocation, sortedFilename), rows);
-                //File.Delete(Path.Combine(_options.FileLocation, unsortedFile));
-                //sortedFiles.Add(sortedFilename);
-                //await SortFile()
                 var sortedFilename = unsortedFile.Replace(UnsortedFileExtension, SortedFileExtension);
                 var unsortedFilePath = Path.Combine(_options.FileLocation, unsortedFile);
                 var sortedFilePath = Path.Combine(_options.FileLocation, sortedFilename);
@@ -143,35 +136,38 @@ namespace JOS.Files.Implementations.Sorting
             }
         }
 
-        private async Task MergeFiles(IReadOnlyList<string> sortedFiles, Stream target)
+        private async Task MergeFiles(
+            IReadOnlyList<string> sortedFiles,
+            Stream target,
+            CancellationToken cancellationToken)
         {
             var chunkSize = _options.Merge.ChunkSize;
             var finalRun = sortedFiles.Count <= chunkSize;
 
             if (finalRun)
             {
-                await MergeFile(sortedFiles, target);
+                await Merge(sortedFiles, target, cancellationToken);
                 return;
             }
 
             var chunks = sortedFiles.Chunk(chunkSize);
-            var chunkedCounter = 0;
+            var chunkCounter = 0;
             // TODO Handle chunks of one (last) better
             foreach (var files in chunks)
             {
-                var outputFilename = $"{++chunkedCounter}{SortedFileExtension}.tmp";
+                var outputFilename = $"{++chunkCounter}{SortedFileExtension}{TempFileExtension}";
                 if (files.Length == 1)
                 {
-                    HandleSingleFile(files.First(), outputFilename);
+                    File.Move(GetPath(files.First()), GetPath(outputFilename.Replace(TempFileExtension, string.Empty)));
                     continue;
                 }
 
                 var outputStream = File.OpenWrite(GetPath(outputFilename));
-                await MergeFile(files, outputStream);
-                File.Move(GetPath(outputFilename), GetPath(outputFilename.Replace(".tmp", string.Empty)), true);
+                await Merge(files, outputStream, cancellationToken);
+                File.Move(GetPath(outputFilename), GetPath(outputFilename.Replace(TempFileExtension, string.Empty)), true);
             }
 
-            sortedFiles = Directory.GetFiles(_options.FileLocation, "*.sorted").OrderBy(x =>
+            sortedFiles = Directory.GetFiles(_options.FileLocation, $"*{SortedFileExtension}").OrderBy(x =>
             {
                 var filename = Path.GetFileNameWithoutExtension(x);
                 return int.Parse(filename);
@@ -179,13 +175,16 @@ namespace JOS.Files.Implementations.Sorting
 
             if (sortedFiles.Count > 1)
             {
-                await MergeFiles(sortedFiles, target);
+                await MergeFiles(sortedFiles, target, cancellationToken);
             }
         }
 
-        private async Task MergeFile(IReadOnlyList<string> filesToMerge, Stream outputStream)
+        private async Task Merge(
+            IReadOnlyList<string> filesToMerge,
+            Stream outputStream,
+            CancellationToken cancellationToken)
         {
-            var (streamReaders, rows) = await GetStreamReaders(filesToMerge);
+            var (streamReaders, rows) = await InitializeStreamReaders(filesToMerge);
             var finishedStreamReaders = new List<int>();
             var done = false;
             await using var outputWriter = new StreamWriter(outputStream, bufferSize: _options.Merge.OutputBufferSize);
@@ -221,14 +220,22 @@ namespace JOS.Files.Implementations.Sorting
             }
         }
 
-        private async Task<(StreamReader[] StreamReaders, List<Row> rows)> GetStreamReaders(IReadOnlyList<string> files)
+        /// <summary>
+        /// Creates a StreamReader for each sorted file.
+        /// Reads one line per StreamReader to initialize the rows list.
+        /// </summary>
+        /// <param name="files"></param>
+        /// <returns></returns>
+        private async Task<(StreamReader[] StreamReaders, List<Row> rows)> InitializeStreamReaders(
+            IReadOnlyList<string> files)
         {
             var streamReaders = new StreamReader[files.Count];
             var rows = new List<Row>(files.Count);
             for (var i = 0; i < files.Count; i++)
             {
-                var path = GetPath(files[i]);
-                streamReaders[i] = new StreamReader(File.OpenRead(path), bufferSize: _options.Merge.InputBufferSize);
+                var sortedFilePath = GetPath(files[i]);
+                var sortedFileStream = File.OpenRead(sortedFilePath);
+                streamReaders[i] = new StreamReader(sortedFileStream, bufferSize: _options.Merge.InputBufferSize);
                 var value = await streamReaders[i].ReadLineAsync();
                 var row = new Row
                 {
@@ -244,11 +251,6 @@ namespace JOS.Files.Implementations.Sorting
         private string GetPath(string filename)
         {
             return Path.Combine(_options.FileLocation, filename);
-        }
-
-        private void HandleSingleFile(string filename, string outputFilename)
-        {
-            File.Move(GetPath(filename), GetPath(outputFilename.Replace(".tmp", string.Empty)));
         }
     }
 
@@ -273,11 +275,12 @@ namespace JOS.Files.Implementations.Sorting
         /// Size of unsorted file (chunk) (in bytes)
         /// </summary>
         public int ChunkSize { get; init; } = 2 * 1024 * 1024;
+        public char NewLineSeparator { get; init; } = '\n';
     }
 
     public class ExternalMergeSortSortOptions
     {
-        public IComparer Comparer { get; init; } = Comparer<string>.Default;
+        public IComparer<string> Comparer { get; init; } = Comparer<string>.Default;
     }
 
     public class ExternalMergeSortMergeOptions

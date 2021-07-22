@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JOS.Files.Implementations.Sorting
 {
     public class InMemorySortFileCommand : ISortFileCommand
     {
-        public async Task Execute(Stream source, Stream target)
+        public async Task Execute(Stream source, Stream target, CancellationToken cancellationToken = default)
         {
             using var streamReader = new StreamReader(source);
             var lines = new List<string>();
