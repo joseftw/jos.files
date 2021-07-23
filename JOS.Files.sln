@@ -24,7 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{40D083FE-7
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JOS.Console.Runner", "test\JOS.Console.Runner\JOS.Console.Runner.csproj", "{BD1741DE-D7A8-4DB9-9540-FCFF8F3BC45C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JOS.SortFile.IntegrationTests", "test\JOS.SortFile.IntegrationTests\JOS.SortFile.IntegrationTests.csproj", "{CA7414A8-F91D-47FD-9172-3F2A8D6D6BB7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JOS.ExternalMergeSort.IntegrationTests", "test\JOS.ExternalMergeSort.IntegrationTests\JOS.ExternalMergeSort.IntegrationTests.csproj", "{CA7414A8-F91D-47FD-9172-3F2A8D6D6BB7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JOS.ExternalMergeSort", "src\JOS.ExternalMergeSort\JOS.ExternalMergeSort.csproj", "{9CF8E8A9-033D-4490-B178-8A0CE4591677}"
 EndProject

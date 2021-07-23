@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace JOS.SortFile.IntegrationTests
+namespace JOS.ExternalMergeSort.IntegrationTests
 {
     internal static class FileComparer
     {

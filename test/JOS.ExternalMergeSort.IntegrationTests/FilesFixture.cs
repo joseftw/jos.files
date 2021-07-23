@@ -1,14 +1,14 @@
 ﻿using System.IO;
 using JOS.Files.Implementations.Sorting;
 
-namespace JOS.SortFile.IntegrationTests
+namespace JOS.ExternalMergeSort.IntegrationTests
 {
     public class FilesFixture
     {
         public FilesFixture()
         {
             // ReSharper disable once PossibleNullReferenceException
-            OutputDirectory = Directory.GetParent(typeof(ExternalMergeSortIntegrationTests).Assembly.Location).FullName;
+            OutputDirectory = Directory.GetParent(typeof(ExternalMergeSort_SmallFiles_IntegrationTests).Assembly.Location).FullName;
             FilesDirectory = FileGenerator.FileLocation;
         }
 

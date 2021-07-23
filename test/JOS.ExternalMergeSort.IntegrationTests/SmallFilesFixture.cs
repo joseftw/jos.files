@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using JOS.Files.Implementations.Sorting;
 using Xunit;
 
-namespace JOS.SortFile.IntegrationTests
+namespace JOS.ExternalMergeSort.IntegrationTests
 {
     public class SmallFilesFixture : FilesFixture, IAsyncLifetime
     {
