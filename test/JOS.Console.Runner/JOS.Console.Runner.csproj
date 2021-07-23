@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.41.1-preview.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\JOS.Files.Implementations\JOS.Files.Implementations.csproj" />
   </ItemGroup>
 

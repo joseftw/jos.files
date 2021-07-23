@@ -100,7 +100,7 @@ namespace JOS.Files.Benchmarks
             {
                 Split = new ExternalMergeSortSplitOptions
                 {
-                    ChunkSize = chunkSizeBytes
+                    RunSize = chunkSizeBytes
                 }
             });
             var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");
@@ -112,7 +112,7 @@ namespace JOS.Files.Benchmarks
         //[Arguments(5)]
         //[Arguments(10)]
         //[Arguments(15)]
-        //public async Task Runs(int chunkSizeBytes)
+        //public async Task FilesPerRun(int chunkSizeBytes)
         //{
         //    var command = new ExternalMergeSortFileCommand(new ExternalMergeSorterOptions
         //    {

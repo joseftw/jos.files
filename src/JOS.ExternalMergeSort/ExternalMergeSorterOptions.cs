@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace JOS.ExternalMergeSort
 {
@@ -22,8 +23,9 @@ namespace JOS.ExternalMergeSort
         /// <summary>
         /// Size of unsorted file (chunk) (in bytes)
         /// </summary>
-        public int ChunkSize { get; init; } = 2 * 1024 * 1024;
+        public int RunSize { get; init; } = 2 * 1024 * 1024;
         public char NewLineSeparator { get; init; } = '\n';
+        public IProgress<double> ProgressHandler { get; init; }
     }
 
     public class ExternalMergeSortSortOptions
@@ -31,11 +33,15 @@ namespace JOS.ExternalMergeSort
         public IComparer<string> Comparer { get; init; } = Comparer<string>.Default;
         public int InputBufferSize { get; init; } = 65536;
         public int OutputBufferSize { get; init; } = 65536;
+        public IProgress<double> ProgressHandler { get; init; }
     }
 
     public class ExternalMergeSortMergeOptions
     {
-        public int ChunkSize { get; init; } = 10;
+        /// <summary>
+        /// How many files we will process per run
+        /// </summary>
+        public int FilesPerRun { get; init; } = 10;
         /// <summary>
         /// Buffer size (in bytes) for input StreamReaders
         /// </summary>
