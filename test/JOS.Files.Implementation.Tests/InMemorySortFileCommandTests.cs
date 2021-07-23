@@ -10,11 +10,11 @@ namespace JOS.Files.Implementation.Tests
 {
     public class InMemorySortFileCommandTests : IAsyncLifetime
     {
-        private readonly InMemorySortFileCommand _sut;
+        private readonly InMemorySortCommand _sut;
 
         public InMemorySortFileCommandTests()
         {
-            _sut = new InMemorySortFileCommand();
+            _sut = new InMemorySortCommand();
         }
 
         [Fact]

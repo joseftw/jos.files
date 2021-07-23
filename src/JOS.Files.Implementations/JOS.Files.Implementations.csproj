@@ -21,4 +21,8 @@
     <PackageReference Include="SharpZipLib" Version="1.3.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\JOS.ExternalMergeSort\JOS.ExternalMergeSort.csproj" />
+  </ItemGroup>
+
 </Project>

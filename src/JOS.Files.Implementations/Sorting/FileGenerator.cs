@@ -11,11 +11,11 @@ namespace JOS.Files.Implementations.Sorting
     public static class FileGenerator
     {
         public static string FileLocation = "c:\\temp\\files";
-        private static readonly Faker<User> UserGenerator;
+        private static Faker<User> _userGenerator;
 
-        static FileGenerator()
+        public static async Task<string> CreateFile(int rows, string location = "", bool overwrite = false)
         {
-            UserGenerator = new Faker<User>()
+            _userGenerator = new Faker<User>()
                 .RuleFor(u => u.Firstname, f => f.Name.FirstName())
                 .RuleFor(u => u.Lastname, f => f.Name.LastName())
                 .RuleFor(u => u.Avatar, f => f.Internet.Avatar())
@@ -23,10 +23,7 @@ namespace JOS.Files.Implementations.Sorting
                 .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Firstname, u.Lastname))
                 .RuleFor(u => u.SomethingUnique, f => $"Value {f.UniqueIndex}")
                 .RuleFor(u => u.SomeGuid, Guid.NewGuid);
-        }
 
-        public static async Task<string> CreateFile(int rows, string location = "", bool overwrite = false)
-        {
             var filename = $"unsorted.{rows}.csv";
             var path = string.IsNullOrWhiteSpace(location) ? Path.Combine(FileLocation, filename) : Path.Combine(location, filename);
             if (!overwrite)
@@ -44,7 +41,7 @@ namespace JOS.Files.Implementations.Sorting
 
             for (int i = 0; i < rows; i++)
             {
-                csv.WriteRecord(UserGenerator.Generate());
+                csv.WriteRecord(_userGenerator.Generate());
                 await csv.NextRecordAsync();
             }
 

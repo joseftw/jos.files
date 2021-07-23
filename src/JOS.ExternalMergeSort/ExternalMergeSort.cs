@@ -5,23 +5,23 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JOS.Files.Implementations.Sorting
+namespace JOS.ExternalMergeSort
 {
-    public class ExternalMergeSortFileCommand : ISortFileCommand
+    public class ExternalMergeSort
     {
         private readonly ExternalMergeSortOptions _options;
         private const string UnsortedFileExtension = ".unsorted";
         private const string SortedFileExtension = ".sorted";
         private const string TempFileExtension = ".tmp";
 
-        public ExternalMergeSortFileCommand() : this(new ExternalMergeSortOptions()) { }
+        public ExternalMergeSort() : this(new ExternalMergeSortOptions()) { }
 
-        public ExternalMergeSortFileCommand(ExternalMergeSortOptions options)
+        public ExternalMergeSort(ExternalMergeSortOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public async Task Execute(Stream source, Stream target, CancellationToken cancellationToken)
+        public async Task Sort(Stream source, Stream target, CancellationToken cancellationToken)
         {
             var files = await SplitFile(source, cancellationToken);
 
@@ -45,7 +45,7 @@ namespace JOS.Files.Implementations.Sorting
         }
 
         private async Task<IReadOnlyCollection<string>> SplitFile(
-            Stream file,
+            Stream sourceStream,
             CancellationToken cancellationToken,
             IProgress<int> progress = default)
         {
@@ -53,17 +53,17 @@ namespace JOS.Files.Implementations.Sorting
             var buffer = new byte[chunkSize];
             var extraBuffer = new List<byte>();
             var filenames = new List<string>();
-            await using (file)
+            await using (sourceStream)
             {
                 var index = 0;
-                while (file.Position < file.Length)
+                while (sourceStream.Position < sourceStream.Length)
                 {
                     var chunkBytesRead = 0;
                     while (chunkBytesRead < chunkSize)
                     {
-                        var bytesRead = await file.ReadAsync(buffer,
-                            chunkBytesRead,
-                            chunkSize - chunkBytesRead, cancellationToken);
+                        var bytesRead = await sourceStream.ReadAsync(
+                            buffer.AsMemory(chunkBytesRead, chunkSize - chunkBytesRead),
+                            cancellationToken);
 
                         if (bytesRead == 0)
                         {
@@ -77,7 +77,7 @@ namespace JOS.Files.Implementations.Sorting
 
                     while (extraByte != _options.Split.NewLineSeparator)
                     {
-                        var flag = file.ReadByte();
+                        var flag = sourceStream.ReadByte();
                         if (flag == -1)
                         {
                             break;
@@ -121,7 +121,7 @@ namespace JOS.Files.Implementations.Sorting
 
         private async Task SortFile(Stream unsortedFile, Stream target)
         {
-            using var streamReader = new StreamReader(unsortedFile, bufferSize: 65536);
+            using var streamReader = new StreamReader(unsortedFile, bufferSize: _options.Sort.InputBufferSize);
             var rows = new List<string>();
             while (!streamReader.EndOfStream)
             {
@@ -129,7 +129,7 @@ namespace JOS.Files.Implementations.Sorting
             }
 
             rows.Sort((str1, str2) => _options.Sort.Comparer.Compare(str1, str2));
-            await using var streamWriter = new StreamWriter(target, bufferSize: 65536);
+            await using var streamWriter = new StreamWriter(target, bufferSize: _options.Sort.OutputBufferSize);
             foreach (var row in rows)
             {
                 await streamWriter.WriteLineAsync(row);
@@ -221,7 +221,7 @@ namespace JOS.Files.Implementations.Sorting
         }
 
         /// <summary>
-        /// Creates a StreamReader for each sorted file.
+        /// Creates a StreamReader for each sorted sourceStream.
         /// Reads one line per StreamReader to initialize the rows list.
         /// </summary>
         /// <param name="files"></param>
@@ -252,53 +252,5 @@ namespace JOS.Files.Implementations.Sorting
         {
             return Path.Combine(_options.FileLocation, filename);
         }
-    }
-
-    public class ExternalMergeSortOptions
-    {
-        public ExternalMergeSortOptions()
-        {
-            Split = new ExternalMergeSortSplitOptions();
-            Sort = new ExternalMergeSortSortOptions();
-            Merge = new ExternalMergeSortMergeOptions();
-        }
-
-        public string FileLocation { get; init; } = "c:\\temp\\files";
-        public ExternalMergeSortSplitOptions Split { get; init; }
-        public ExternalMergeSortSortOptions Sort { get; init; }
-        public ExternalMergeSortMergeOptions Merge { get; init; }
-    }
-
-    public class ExternalMergeSortSplitOptions
-    {
-        /// <summary>
-        /// Size of unsorted file (chunk) (in bytes)
-        /// </summary>
-        public int ChunkSize { get; init; } = 2 * 1024 * 1024;
-        public char NewLineSeparator { get; init; } = '\n';
-    }
-
-    public class ExternalMergeSortSortOptions
-    {
-        public IComparer<string> Comparer { get; init; } = Comparer<string>.Default;
-    }
-
-    public class ExternalMergeSortMergeOptions
-    {
-        public int ChunkSize { get; init; } = 10;
-        /// <summary>
-        /// Buffer size (in bytes) for input StreamReaders
-        /// </summary>
-        public int InputBufferSize { get; init; } = 65536;
-        /// <summary>
-        /// Buffer size (in bytes) for output StreamWriter
-        /// </summary>
-        public int OutputBufferSize { get; init; } = 65536;
-    }
-
-    internal readonly struct Row
-    {
-        public string Value { get; init; }
-        public int StreamReader { get; init; }
     }
 }

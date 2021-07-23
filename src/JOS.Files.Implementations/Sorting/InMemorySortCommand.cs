@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JOS.Files.Implementations.Sorting
 {
-    public class InMemorySortFileCommand : ISortFileCommand
+    public class InMemorySortCommand : ISortFileCommand
     {
         public async Task Execute(Stream source, Stream target, CancellationToken cancellationToken = default)
         {

@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using JOS.Files.Implementations.Sorting;
+using JOS.ExternalMergeSort;
 using Shouldly;
 using Xunit;
 
@@ -12,12 +12,12 @@ namespace JOS.SortFile.IntegrationTests
     public class ExternalMergeSortIntegrationTests : IClassFixture<SmallFilesFixture>
     {
         private readonly SmallFilesFixture _fixture;
-        private readonly ExternalMergeSortFileCommand _sut;
+        private readonly ExternalMergeSort.ExternalMergeSort _sut;
 
         public ExternalMergeSortIntegrationTests(SmallFilesFixture fixture)
         {
             _fixture = fixture;
-            _sut = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions{FileLocation = _fixture.FilesDirectory});
+            _sut = new ExternalMergeSort.ExternalMergeSort(new ExternalMergeSortOptions{FileLocation = _fixture.FilesDirectory});
         }
 
         [Theory]
@@ -36,7 +36,7 @@ namespace JOS.SortFile.IntegrationTests
             var targetFullPath = Path.Combine(_fixture.FilesDirectory, targetFilename);
             var target = File.OpenWrite(targetFullPath);
 
-            await _sut.Execute(sourceStream, target, CancellationToken.None);
+            await _sut.Sort(sourceStream, target, CancellationToken.None);
             var unsortedFileRows = await File.ReadAllLinesAsync(sourceFullPath);
             Array.Sort(unsortedFileRows);
             var arraySortedFilePath = Path.Combine(_fixture.FilesDirectory, "inmemory-sorted");
@@ -56,12 +56,12 @@ namespace JOS.SortFile.IntegrationTests
     public class ExternalMergeSort_LargeFiles_IntegrationTests : IClassFixture<LargeFilesFixture>
     {
         private readonly LargeFilesFixture _fixture;
-        private readonly ExternalMergeSortFileCommand _sut;
+        private readonly ExternalMergeSort.ExternalMergeSort _sut;
 
         public ExternalMergeSort_LargeFiles_IntegrationTests(LargeFilesFixture fixture)
         {
             _fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
-            _sut = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions { FileLocation = _fixture.FilesDirectory });
+            _sut = new ExternalMergeSort.ExternalMergeSort(new ExternalMergeSortOptions { FileLocation = _fixture.FilesDirectory });
         }
 
         [Theory]
@@ -77,7 +77,7 @@ namespace JOS.SortFile.IntegrationTests
             var targetFullPath = Path.Combine(_fixture.FilesDirectory, targetFilename);
             var target = File.OpenWrite(targetFullPath);
 
-            await _sut.Execute(sourceStream, target, CancellationToken.None);
+            await _sut.Sort(sourceStream, target, CancellationToken.None);
             var unsortedFileRows = await File.ReadAllLinesAsync(sourceFullPath);
             Array.Sort(unsortedFileRows);
             var arraySortedFilePath = Path.Combine(_fixture.FilesDirectory, "inmemory-sorted");
