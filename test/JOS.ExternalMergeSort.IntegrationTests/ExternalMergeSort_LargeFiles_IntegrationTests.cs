@@ -11,12 +11,12 @@ namespace JOS.ExternalMergeSort.IntegrationTests
     public class ExternalMergeSort_LargeFiles_IntegrationTests : IClassFixture<LargeFilesFixture>
     {
         private readonly LargeFilesFixture _fixture;
-        private readonly JOS.ExternalMergeSort.ExternalMergeSort _sut;
+        private readonly ExternalMergeSort _sut;
 
         public ExternalMergeSort_LargeFiles_IntegrationTests(LargeFilesFixture fixture)
         {
             _fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
-            _sut = new JOS.ExternalMergeSort.ExternalMergeSort(new ExternalMergeSortOptions { FileLocation = _fixture.FilesDirectory });
+            _sut = new ExternalMergeSort(new ExternalMergeSortOptions { FileLocation = _fixture.FilesDirectory });
         }
 
         [Theory]
@@ -24,7 +24,7 @@ namespace JOS.ExternalMergeSort.IntegrationTests
         [InlineData(100000000)]
         public async Task FileSortedWithExternalMergeSortCommandShouldBeIdenticalToFileSortedWithArraySort(int rows)
         {
-            var sourceFilename = _fixture.Files[rows];
+            var sourceFilename = _fixture.UnsortedFiles[rows];
             var sourceFullPath = Path.Combine(_fixture.FilesDirectory, sourceFilename);
             var sourceStream = File.OpenRead(sourceFullPath);
             var unsortedFileSize = sourceStream.Length;
