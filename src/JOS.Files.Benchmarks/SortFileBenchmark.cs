@@ -46,7 +46,7 @@ namespace JOS.Files.Benchmarks
         //[Arguments(100000)]
         ////[Arguments(1000000)]
         ////[Arguments(10000000)]
-        //public async Task ExternalMergeSort(int rows)
+        //public async Task ExternalMergeSorter(int rows)
         //{
         //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
         //    var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{rows}.csv");
@@ -96,7 +96,7 @@ namespace JOS.Files.Benchmarks
         [Arguments(128 * 1024 * 1024)]
         public async Task ChunkSize(int chunkSizeBytes)
         {
-            var command = new ExternalMergeSort.ExternalMergeSort(new ExternalMergeSortOptions
+            var command = new ExternalMergeSorter(new ExternalMergeSorterOptions
             {
                 Split = new ExternalMergeSortSplitOptions
                 {
@@ -114,7 +114,7 @@ namespace JOS.Files.Benchmarks
         //[Arguments(15)]
         //public async Task Runs(int chunkSizeBytes)
         //{
-        //    var command = new ExternalMergeSortFileCommand(new ExternalMergeSortOptions
+        //    var command = new ExternalMergeSortFileCommand(new ExternalMergeSorterOptions
         //    {
         //        Split = new ExternalMergeSortSplitOptions
         //        {

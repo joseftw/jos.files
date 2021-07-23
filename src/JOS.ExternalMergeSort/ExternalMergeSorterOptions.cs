@@ -2,9 +2,9 @@
 
 namespace JOS.ExternalMergeSort
 {
-    public class ExternalMergeSortOptions
+    public class ExternalMergeSorterOptions
     {
-        public ExternalMergeSortOptions()
+        public ExternalMergeSorterOptions()
         {
             Split = new ExternalMergeSortSplitOptions();
             Sort = new ExternalMergeSortSortOptions();

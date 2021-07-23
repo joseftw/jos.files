@@ -1,8 +1,8 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using JOS.ExternalMergeSort;
 using JOS.Files.Implementations.Sorting;
 
 namespace JOS.Console.Runner
@@ -13,7 +13,7 @@ namespace JOS.Console.Runner
         {
             var rows = 1_000_000_0;
             var sourceFilename = $"unsorted.{rows}.csv";
-            var sortCommand = new ExternalMergeSort.ExternalMergeSort();
+            var sortCommand = new ExternalMergeSorter();
             var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);
             if (!File.Exists(unsortedFilePath))
             {

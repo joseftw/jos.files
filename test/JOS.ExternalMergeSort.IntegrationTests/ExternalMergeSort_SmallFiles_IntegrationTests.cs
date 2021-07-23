@@ -11,12 +11,12 @@ namespace JOS.ExternalMergeSort.IntegrationTests
     public class ExternalMergeSort_SmallFiles_IntegrationTests : IClassFixture<SmallFilesFixture>
     {
         private readonly SmallFilesFixture _fixture;
-        private readonly ExternalMergeSort _sut;
+        private readonly ExternalMergeSorter _sut;
 
         public ExternalMergeSort_SmallFiles_IntegrationTests(SmallFilesFixture fixture)
         {
             _fixture = fixture;
-            _sut = new ExternalMergeSort(new ExternalMergeSortOptions{FileLocation = _fixture.FilesDirectory});
+            _sut = new ExternalMergeSorter(new ExternalMergeSorterOptions{FileLocation = _fixture.FilesDirectory});
         }
 
         [Theory]

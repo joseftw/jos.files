@@ -11,12 +11,12 @@ namespace JOS.ExternalMergeSort.IntegrationTests
     public class ExternalMergeSort_LargeFiles_IntegrationTests : IClassFixture<LargeFilesFixture>
     {
         private readonly LargeFilesFixture _fixture;
-        private readonly ExternalMergeSort _sut;
+        private readonly ExternalMergeSorter _sut;
 
         public ExternalMergeSort_LargeFiles_IntegrationTests(LargeFilesFixture fixture)
         {
             _fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
-            _sut = new ExternalMergeSort(new ExternalMergeSortOptions { FileLocation = _fixture.FilesDirectory });
+            _sut = new ExternalMergeSorter(new ExternalMergeSorterOptions { FileLocation = _fixture.FilesDirectory });
         }
 
         [Theory]

@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace JOS.ExternalMergeSort
 {
-    public class ExternalMergeSort
+    public class ExternalMergeSorter
     {
-        private readonly ExternalMergeSortOptions _options;
+        private readonly ExternalMergeSorterOptions _options;
         private const string UnsortedFileExtension = ".unsorted";
         private const string SortedFileExtension = ".sorted";
         private const string TempFileExtension = ".tmp";
 
-        public ExternalMergeSort() : this(new ExternalMergeSortOptions()) { }
+        public ExternalMergeSorter() : this(new ExternalMergeSorterOptions()) { }
 
-        public ExternalMergeSort(ExternalMergeSortOptions options)
+        public ExternalMergeSorter(ExternalMergeSorterOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
