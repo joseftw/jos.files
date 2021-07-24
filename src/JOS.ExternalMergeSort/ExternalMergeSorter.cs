@@ -9,6 +9,8 @@ namespace JOS.ExternalMergeSort
 {
     public class ExternalMergeSorter
     {
+        private double _totalFilesToMerge;
+        private int _mergeFilesProcessed;
         private readonly ExternalMergeSorterOptions _options;
         private const string UnsortedFileExtension = ".unsorted";
         private const string SortedFileExtension = ".sorted";
@@ -18,6 +20,8 @@ namespace JOS.ExternalMergeSort
 
         public ExternalMergeSorter(ExternalMergeSorterOptions options)
         {
+            _totalFilesToMerge = 0;
+            _mergeFilesProcessed = 0;
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
@@ -33,6 +37,21 @@ namespace JOS.ExternalMergeSort
             }
 
             var sortedFiles = await SortFiles(files);
+            var done = false;
+            var size = _options.Merge.FilesPerRun;
+            _totalFilesToMerge = sortedFiles.Count;
+            var result = sortedFiles.Count / size;
+
+            while (!done)
+            {
+                if (result <= 0)
+                {
+                    done = true;
+                }
+                _totalFilesToMerge += result;
+                result /= size;
+            }
+
             await MergeFiles(sortedFiles, target, cancellationToken);
         }
 
@@ -135,8 +154,7 @@ namespace JOS.ExternalMergeSort
         private async Task MergeFiles(
             IReadOnlyList<string> sortedFiles,
             Stream target,
-            CancellationToken cancellationToken,
-            IProgress<double> progressHandler = default)
+            CancellationToken cancellationToken)
         {
             var runSize = _options.Merge.FilesPerRun;
             var finalRun = sortedFiles.Count <= runSize;
@@ -147,9 +165,9 @@ namespace JOS.ExternalMergeSort
                 return;
             }
 
+            // TODO better logic when chunking, we don't want to have 1 chunk of 10 and 1 of 1 for example, better to spread it out.
             var runs = sortedFiles.Chunk(runSize);
             var chunkCounter = 0;
-            // TODO Handle chunks of one (last) better
             foreach (var files in runs)
             {
                 var outputFilename = $"{++chunkCounter}{SortedFileExtension}{TempFileExtension}";
@@ -199,6 +217,7 @@ namespace JOS.ExternalMergeSort
                     rows.RemoveAt(indexToRemove);
                     finishedStreamReaders.Add(streamReaderIndex);
                     done = finishedStreamReaders.Count == streamReaders.Length;
+                    _options.Merge.ProgressHandler?.Report(++_mergeFilesProcessed / _totalFilesToMerge);
                     continue;
                 }
 

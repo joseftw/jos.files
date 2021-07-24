@@ -50,6 +50,7 @@ namespace JOS.ExternalMergeSort
         /// Buffer size (in bytes) for output StreamWriter
         /// </summary>
         public int OutputBufferSize { get; init; } = 65536;
+        public IProgress<double> ProgressHandler { get; init; }
     }
 
 }

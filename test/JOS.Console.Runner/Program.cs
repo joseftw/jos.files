@@ -12,6 +12,21 @@ namespace JOS.Console.Runner
     {
         public static async Task Main(string[] args)
         {
+            var done = false;
+            var totalFiles = 1017;
+            var size = 10;
+            var result = totalFiles / size;
+
+            while (!done)
+            {
+                if (result <= 0)
+                {
+                    done = true;
+                }
+                totalFiles += result;
+                result /= size;
+            }
+
             var rows = 1_000_000_0;
             var sourceFilename = $"unsorted.{rows}.csv";
             var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);
@@ -34,6 +49,12 @@ namespace JOS.Console.Runner
                 RemoveLastLine();
                 System.Console.Write($"Sort progress: {percentage:##.##}%");
             });
+            var mergeFilesProgressHandler = new Progress<double>(x =>
+            {
+                var percentage = x * 100;
+                RemoveLastLine();
+                System.Console.Write($"Merge progress: {percentage:##.##}%");
+            });
 
             var sortCommand = new ExternalMergeSorter(new ExternalMergeSorterOptions
             {
@@ -44,6 +65,10 @@ namespace JOS.Console.Runner
                 Sort = new ExternalMergeSortSortOptions
                 {
                     ProgressHandler = sortFilesProgressHandler
+                },
+                Merge = new ExternalMergeSortMergeOptions
+                {
+                    ProgressHandler = mergeFilesProgressHandler
                 }
             });
 
