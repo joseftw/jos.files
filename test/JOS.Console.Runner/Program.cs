@@ -12,22 +12,8 @@ namespace JOS.Console.Runner
     {
         public static async Task Main(string[] args)
         {
-            var done = false;
-            var totalFiles = 1017;
-            var size = 10;
-            var result = totalFiles / size;
 
-            while (!done)
-            {
-                if (result <= 0)
-                {
-                    done = true;
-                }
-                totalFiles += result;
-                result /= size;
-            }
-
-            var rows = 1_000_000_0;
+            var rows = 100_000_000;
             var sourceFilename = $"unsorted.{rows}.csv";
             var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);
             if (!File.Exists(unsortedFilePath))
@@ -40,19 +26,16 @@ namespace JOS.Console.Runner
             var splitFileProgressHandler = new Progress<double>(x =>
             {
                 var percentage = x * 100;
-                RemoveLastLine();
                 System.Console.Write($"Split progress: {percentage:##.##}%");
             });
             var sortFilesProgressHandler = new Progress<double>(x =>
             {
                 var percentage = x * 100;
-                RemoveLastLine();
                 System.Console.Write($"Sort progress: {percentage:##.##}%");
             });
             var mergeFilesProgressHandler = new Progress<double>(x =>
             {
                 var percentage = x * 100;
-                RemoveLastLine();
                 System.Console.Write($"Merge progress: {percentage:##.##}%");
             });
 
@@ -87,15 +70,6 @@ namespace JOS.Console.Runner
             //await File.WriteAllLinesAsync(Path.Combine(FileGenerator.FileLocation, "sorted.inmemory.csv"), unsortedRows);
             //stopwatch.Stop();
             //System.Console.WriteLine($"In-memory done, took {stopwatch.Elapsed}");
-        }
-
-        // TODO replace with Spectre.Console Progress
-        private static void RemoveLastLine()
-        {
-            var currentLineCursor = System.Console.CursorTop;
-            System.Console.SetCursorPosition(0, System.Console.CursorTop);
-            System.Console.Write(new string(' ', System.Console.WindowWidth));
-            System.Console.SetCursorPosition(0, currentLineCursor);
         }
     }
 }

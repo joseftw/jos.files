@@ -200,7 +200,7 @@ namespace JOS.ExternalMergeSort
             CancellationToken cancellationToken)
         {
             var (streamReaders, rows) = await InitializeStreamReaders(filesToMerge);
-            var finishedStreamReaders = new List<int>();
+            var finishedStreamReaders = new List<int>(streamReaders.Length);
             var done = false;
             await using var outputWriter = new StreamWriter(outputStream, bufferSize: _options.Merge.OutputBufferSize);
 
@@ -232,16 +232,16 @@ namespace JOS.ExternalMergeSort
         /// Creates a StreamReader for each sorted sourceStream.
         /// Reads one line per StreamReader to initialize the rows list.
         /// </summary>
-        /// <param name="files"></param>
+        /// <param name="sortedFiles"></param>
         /// <returns></returns>
         private async Task<(StreamReader[] StreamReaders, List<Row> rows)> InitializeStreamReaders(
-            IReadOnlyList<string> files)
+            IReadOnlyList<string> sortedFiles)
         {
-            var streamReaders = new StreamReader[files.Count];
-            var rows = new List<Row>(files.Count);
-            for (var i = 0; i < files.Count; i++)
+            var streamReaders = new StreamReader[sortedFiles.Count];
+            var rows = new List<Row>(sortedFiles.Count);
+            for (var i = 0; i < sortedFiles.Count; i++)
             {
-                var sortedFilePath = GetFullPath(files[i]);
+                var sortedFilePath = GetFullPath(sortedFiles[i]);
                 var sortedFileStream = File.OpenRead(sortedFilePath);
                 streamReaders[i] = new StreamReader(sortedFileStream, bufferSize: _options.Merge.InputBufferSize);
                 var value = await streamReaders[i].ReadLineAsync();
