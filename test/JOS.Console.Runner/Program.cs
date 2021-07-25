@@ -13,7 +13,7 @@ namespace JOS.Console.Runner
         public static async Task Main(string[] args)
         {
 
-            var rows = 100_000_000;
+            var rows = 10_000_000;
             var sourceFilename = $"unsorted.{rows}.csv";
             var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);
             if (!File.Exists(unsortedFilePath))

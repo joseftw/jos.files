@@ -94,7 +94,7 @@ namespace JOS.Files.Benchmarks
         [Arguments(32 * 1024 * 1024)]
         [Arguments(64 * 1024 * 1024)]
         [Arguments(128 * 1024 * 1024)]
-        public async Task ChunkSize(uint chunkSizeBytes)
+        public async Task ChunkSize(int chunkSizeBytes)
         {
             var command = new ExternalMergeSorter(new ExternalMergeSorterOptions
             {

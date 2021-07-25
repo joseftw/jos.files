@@ -174,46 +174,51 @@ namespace JOS.ExternalMergeSort
             Array.Clear(_unsortedRows, 0, _unsortedRows.Length);
         }
 
-        private async Task MergeFiles(
-            IReadOnlyList<string> sortedFiles,
-            Stream target,
-            CancellationToken cancellationToken)
+        private async Task MergeFiles(IReadOnlyList<string> sortedFiles, Stream target, CancellationToken cancellationToken)
         {
-            var runSize = _options.Merge.FilesPerRun;
-            var finalRun = sortedFiles.Count <= runSize;
-
-            if (finalRun)
+            var done = false;
+            while (!done)
             {
-                await Merge(sortedFiles, target, cancellationToken);
-                return;
-            }
+                var runSize = _options.Merge.FilesPerRun;
+                var finalRun = sortedFiles.Count <= runSize;
 
-            // TODO better logic when chunking, we don't want to have 1 chunk of 10 and 1 of 1 for example, better to spread it out.
-            var runs = sortedFiles.Chunk(runSize);
-            var chunkCounter = 0;
-            foreach (var files in runs)
-            {
-                var outputFilename = $"{++chunkCounter}{SortedFileExtension}{TempFileExtension}";
-                if (files.Length == 1)
+                if (finalRun)
                 {
-                    File.Move(GetFullPath(files.First()), GetFullPath(outputFilename.Replace(TempFileExtension, string.Empty)));
+                    await Merge(sortedFiles, target, cancellationToken);
+                    return;
+                }
+
+                // TODO better logic when chunking, we don't want to have 1 chunk of 10 and 1 of 1 for example, better to spread it out.
+                var runs = sortedFiles.Chunk(runSize);
+                var chunkCounter = 0;
+                foreach (var files in runs)
+                {
+                    var outputFilename = $"{++chunkCounter}{SortedFileExtension}{TempFileExtension}";
+                    if (files.Length == 1)
+                    {
+                        File.Move(GetFullPath(files.First()), GetFullPath(outputFilename.Replace(TempFileExtension, string.Empty)));
+                        continue;
+                    }
+
+                    var outputStream = File.OpenWrite(GetFullPath(outputFilename));
+                    await Merge(files, outputStream, cancellationToken);
+                    File.Move(GetFullPath(outputFilename), GetFullPath(outputFilename.Replace(TempFileExtension, string.Empty)), true);
+                }
+
+                sortedFiles = Directory.GetFiles(_options.FileLocation, $"*{SortedFileExtension}")
+                    .OrderBy(x =>
+                    {
+                        var filename = Path.GetFileNameWithoutExtension(x);
+                        return int.Parse(filename);
+                    })
+                    .ToArray();
+
+                if (sortedFiles.Count > 1)
+                {
                     continue;
                 }
 
-                var outputStream = File.OpenWrite(GetFullPath(outputFilename));
-                await Merge(files, outputStream, cancellationToken);
-                File.Move(GetFullPath(outputFilename), GetFullPath(outputFilename.Replace(TempFileExtension, string.Empty)), true);
-            }
-
-            sortedFiles = Directory.GetFiles(_options.FileLocation, $"*{SortedFileExtension}").OrderBy(x =>
-            {
-                var filename = Path.GetFileNameWithoutExtension(x);
-                return int.Parse(filename);
-            }).ToArray();
-
-            if (sortedFiles.Count > 1)
-            {
-                await MergeFiles(sortedFiles, target, cancellationToken);
+                done = true;
             }
         }
 
