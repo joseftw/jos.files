@@ -94,13 +94,13 @@ namespace JOS.Files.Benchmarks
         [Arguments(32 * 1024 * 1024)]
         [Arguments(64 * 1024 * 1024)]
         [Arguments(128 * 1024 * 1024)]
-        public async Task ChunkSize(int chunkSizeBytes)
+        public async Task ChunkSize(uint chunkSizeBytes)
         {
             var command = new ExternalMergeSorter(new ExternalMergeSorterOptions
             {
                 Split = new ExternalMergeSortSplitOptions
                 {
-                    RunSize = chunkSizeBytes
+                    FileSize = chunkSizeBytes
                 }
             });
             var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");

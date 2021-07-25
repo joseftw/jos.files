@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,9 @@ namespace JOS.ExternalMergeSort
 {
     public class ExternalMergeSorter
     {
+        private readonly ArrayPool<string> _arrayPool;
+        private long _maxUnsortedRows;
+        private string[] _unsortedRows;
         private double _totalFilesToMerge;
         private int _mergeFilesProcessed;
         private readonly ExternalMergeSorterOptions _options;
@@ -23,20 +27,29 @@ namespace JOS.ExternalMergeSort
             _totalFilesToMerge = 0;
             _mergeFilesProcessed = 0;
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _arrayPool = ArrayPool<string>.Shared;
         }
 
         public async Task Sort(Stream source, Stream target, CancellationToken cancellationToken)
         {
             var files = await SplitFile(source, cancellationToken);
-            
-            if (files.Count == 1)
+            IReadOnlyList<string> sortedFiles;
+            try
             {
-                var unsortedFilePath = Path.Combine(_options.FileLocation, files.First());
-                await SortFile(File.OpenRead(unsortedFilePath), target);
-                return;
+                _unsortedRows = _arrayPool.Rent(_maxUnsortedRows > int.MaxValue ? int.MaxValue : (int)_maxUnsortedRows);
+                if (files.Count == 1)
+                {
+                    var unsortedFilePath = Path.Combine(_options.FileLocation, files.First());
+                    await SortFile(File.OpenRead(unsortedFilePath), target);
+                    return;
+                }
+                sortedFiles = await SortFiles(files);
             }
-
-            var sortedFiles = await SortFiles(files);
+            finally
+            {
+                _arrayPool.Return(_unsortedRows);
+            }
+            
             var done = false;
             var size = _options.Merge.FilesPerRun;
             _totalFilesToMerge = sortedFiles.Count;
@@ -59,33 +72,37 @@ namespace JOS.ExternalMergeSort
             Stream sourceStream,
             CancellationToken cancellationToken)
         {
-            var runSize = _options.Split.RunSize;
-            var buffer = new byte[runSize];
+            var fileSize = _options.Split.FileSize;
+            var buffer = new byte[fileSize];
             var extraBuffer = new List<byte>();
             var filenames = new List<string>();
-            double totalFiles = Math.Ceiling(sourceStream.Length / (double)_options.Split.RunSize);
+            var totalFiles = Math.Ceiling(sourceStream.Length / (double)_options.Split.FileSize);
 
             await using (sourceStream)
             {
                 var currentFile = 0L;
                 while (sourceStream.Position < sourceStream.Length)
                 {
+                    var totalRows = 0;
                     var runBytesRead = 0;
-                    while (runBytesRead < runSize)
+                    while (runBytesRead < fileSize)
                     {
-                        var bytesRead = await sourceStream.ReadAsync(
-                            buffer.AsMemory(runBytesRead, runSize - runBytesRead),
-                            cancellationToken);
-
-                        if (bytesRead == 0)
+                        var value = sourceStream.ReadByte();
+                        if (value == -1)
                         {
                             break;
                         }
 
-                        runBytesRead += bytesRead;
+                        var @byte = (byte)value;
+                        buffer[runBytesRead] = @byte;
+                        runBytesRead++;
+                        if (@byte == _options.Split.NewLineSeparator)
+                        {
+                            totalRows++;
+                        }
                     }
 
-                    var extraByte = buffer[runSize - 1];
+                    var extraByte = buffer[fileSize - 1];
 
                     while (extraByte != _options.Split.NewLineSeparator)
                     {
@@ -104,6 +121,11 @@ namespace JOS.ExternalMergeSort
                     if (extraBuffer.Count > 0)
                     {
                         await unsortedFile.WriteAsync(extraBuffer.ToArray(), 0, extraBuffer.Count, cancellationToken);
+                    }
+
+                    if (totalRows > _maxUnsortedRows)
+                    {
+                        _maxUnsortedRows = totalRows;
                     }
 
                     _options.Split.ProgressHandler?.Report(currentFile / totalFiles);
@@ -130,25 +152,26 @@ namespace JOS.ExternalMergeSort
                 sortedFiles.Add(sortedFilename);
                 _options.Sort.ProgressHandler?.Report(sortedFiles.Count / totalFiles);
             }
-
             return sortedFiles;
         }
 
         private async Task SortFile(Stream unsortedFile, Stream target)
         {
             using var streamReader = new StreamReader(unsortedFile, bufferSize: _options.Sort.InputBufferSize);
-            var rows = new List<string>();
+            var counter = 0;
             while (!streamReader.EndOfStream)
             {
-                rows.Add(await streamReader.ReadLineAsync());
+                _unsortedRows[counter++] = await streamReader.ReadLineAsync();
             }
 
-            rows.Sort((str1, str2) => _options.Sort.Comparer.Compare(str1, str2));
+            Array.Sort(_unsortedRows, _options.Sort.Comparer);
             await using var streamWriter = new StreamWriter(target, bufferSize: _options.Sort.OutputBufferSize);
-            foreach (var row in rows)
+            foreach (var row in _unsortedRows.Where(x => x != null))
             {
                 await streamWriter.WriteLineAsync(row);
             }
+
+            Array.Clear(_unsortedRows, 0, _unsortedRows.Length);
         }
 
         private async Task MergeFiles(

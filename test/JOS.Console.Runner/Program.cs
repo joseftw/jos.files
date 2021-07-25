@@ -26,17 +26,17 @@ namespace JOS.Console.Runner
             var splitFileProgressHandler = new Progress<double>(x =>
             {
                 var percentage = x * 100;
-                System.Console.Write($"Split progress: {percentage:##.##}%");
+                System.Console.WriteLine($"Split progress: {percentage:##.##}%");
             });
             var sortFilesProgressHandler = new Progress<double>(x =>
             {
                 var percentage = x * 100;
-                System.Console.Write($"Sort progress: {percentage:##.##}%");
+                System.Console.WriteLine($"Sort progress: {percentage:##.##}%");
             });
             var mergeFilesProgressHandler = new Progress<double>(x =>
             {
                 var percentage = x * 100;
-                System.Console.Write($"Merge progress: {percentage:##.##}%");
+                System.Console.WriteLine($"Merge progress: {percentage:##.##}%");
             });
 
             var sortCommand = new ExternalMergeSorter(new ExternalMergeSorterOptions

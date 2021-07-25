@@ -23,7 +23,7 @@ namespace JOS.ExternalMergeSort
         /// <summary>
         /// Size of unsorted file (chunk) (in bytes)
         /// </summary>
-        public int RunSize { get; init; } = 2 * 1024 * 1024;
+        public int FileSize { get; init; } = 2 * 1024 * 1024;
         public char NewLineSeparator { get; init; } = '\n';
         public IProgress<double> ProgressHandler { get; init; }
     }
