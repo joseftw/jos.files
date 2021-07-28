@@ -1,7 +1,8 @@
 ﻿# JOS.ExternalMergeSort
 
 ## Introduction
-
+External Merge Sort implementation written in c# (dotnet).
+More details can be found [here](https://josef.codes/sorting-really-large-files-with-c-sharp/)
 ## Usage
 
 ### Default
