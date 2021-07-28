@@ -10,7 +10,6 @@ namespace JOS.ExternalMergeSort
 {
     public class ExternalMergeSorter
     {
-        private readonly ArrayPool<string> _arrayPool;
         private long _maxUnsortedRows;
         private string[] _unsortedRows;
         private double _totalFilesToMerge;
@@ -27,29 +26,20 @@ namespace JOS.ExternalMergeSort
             _totalFilesToMerge = 0;
             _mergeFilesProcessed = 0;
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _arrayPool = ArrayPool<string>.Shared;
         }
 
         public async Task Sort(Stream source, Stream target, CancellationToken cancellationToken)
         {
             var files = await SplitFile(source, cancellationToken);
-            IReadOnlyList<string> sortedFiles;
-            try
+            _unsortedRows = new string[_maxUnsortedRows];
+            if (files.Count == 1)
             {
-                _unsortedRows = _arrayPool.Rent(_maxUnsortedRows > int.MaxValue ? int.MaxValue : (int)_maxUnsortedRows);
-                if (files.Count == 1)
-                {
-                    var unsortedFilePath = Path.Combine(_options.FileLocation, files.First());
-                    await SortFile(File.OpenRead(unsortedFilePath), target);
-                    return;
-                }
-                sortedFiles = await SortFiles(files);
+                var unsortedFilePath = Path.Combine(_options.FileLocation, files.First());
+                await SortFile(File.OpenRead(unsortedFilePath), target);
+                return;
             }
-            finally
-            {
-                _arrayPool.Return(_unsortedRows);
-            }
-            
+            var sortedFiles = await SortFiles(files);
+
             var done = false;
             var size = _options.Merge.FilesPerRun;
             _totalFilesToMerge = sortedFiles.Count;
@@ -120,6 +110,7 @@ namespace JOS.ExternalMergeSort
                     await unsortedFile.WriteAsync(buffer, 0, runBytesRead, cancellationToken);
                     if (extraBuffer.Count > 0)
                     {
+                        totalRows++;
                         await unsortedFile.WriteAsync(extraBuffer.ToArray(), 0, extraBuffer.Count, cancellationToken);
                     }
 
