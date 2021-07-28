@@ -45,7 +45,7 @@ var mergeFilesProgressHandler = new Progress<double>(x =>
     System.Console.WriteLine($"Merge progress: {percentage:##.##}%");
 });
 
-//var sortCommand = new ExternalMergeSorter(new ExternalMergeSorterOptions
+var sortCommand = new ExternalMergeSorter(new ExternalMergeSorterOptions
 {
     Split = new ExternalMergeSortSplitOptions
     {
@@ -61,7 +61,7 @@ var mergeFilesProgressHandler = new Progress<double>(x =>
     }
 });
 
-var sourceFile = Path.Combine(FileGenerator.FileLocation, sourceFilename);
-targetFile = File.OpenWrite(Path.Combine(FileGenerator.FileLocation, $"sorted.{rows}.csv"));
-await sortCommand.Sort(File.OpenRead(sourceFile), targetFile, CancellationToken.None);
+var unsortedFile = File.OpenRead("MyUnsortedFile.csv");
+var targetFile = File.OpenRead("MySortedFile.csv");
+await sortCommand.Sort(unsortedFile, targetFile, CancellationToken.None);
 ```
