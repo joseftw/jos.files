@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace JOS.Files.Benchmarks
 {
     [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.NetCoreApp50, invocationCount: 2, warmupCount: 2, targetCount: 2, launchCount: 2)]
+    [SimpleJob(RuntimeMoniker.Net50, invocationCount: 2, warmupCount: 2, targetCount: 2, launchCount: 2)]
     [HtmlExporter]
     public class FileUploadBenchmark
     {

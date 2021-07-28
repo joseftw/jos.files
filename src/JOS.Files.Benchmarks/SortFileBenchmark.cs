@@ -1,34 +1,44 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using JOS.ExternalMergeSort;
 using JOS.Files.Implementations.Sorting;
 
 namespace JOS.Files.Benchmarks
 {
     [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.NetCoreApp50)]
+    [SimpleJob(RuntimeMoniker.Net60)]
     [HtmlExporter]
     public class SortFileBenchmark
     {
-        private InMemorySortFileCommand _inMemorySortFileCommand;
+        private readonly InMemorySortCommand _inMemorySortCommand;
+        private readonly ExternalMergeSortCommand _externalMergeSortCommand;
 
-        [GlobalSetup]
-        public async Task GlobalSetup()
+        public SortFileBenchmark()
         {
-            _inMemorySortFileCommand = new InMemorySortFileCommand();
-
-            await Task.WhenAll(
-                FileGenerator.CreateFile(10),
-                FileGenerator.CreateFile(100),
-                FileGenerator.CreateFile(1000),
-                FileGenerator.CreateFile(10000),
-                FileGenerator.CreateFile(100000),
-                FileGenerator.CreateFile(1000000),
-                FileGenerator.CreateFile(10000000));
+            _inMemorySortCommand = new InMemorySortCommand();
+            _externalMergeSortCommand = new ExternalMergeSortCommand();
         }
 
-        [Benchmark(Baseline = true)]
+        //[Benchmark(Baseline = true)]
+        ////[Arguments(10)]
+        ////[Arguments(100)]
+        ////[Arguments(1000)]
+        ////[Arguments(10000)]
+        //[Arguments(100000)]
+        ////[Arguments(1000000)]
+        ////[Arguments(10000000)]
+        //public async Task InMemory(int rows)
+        //{
+        //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
+        //    var target = File.OpenWrite($"c:\\temp\\files\\inmemory-sorted.{rows}.csv");
+        //    await _inMemorySortCommand.Execute(source, target);
+        //}
+
+        [Benchmark]
         [Arguments(10)]
         [Arguments(100)]
         [Arguments(1000)]
@@ -36,10 +46,88 @@ namespace JOS.Files.Benchmarks
         [Arguments(100000)]
         [Arguments(1000000)]
         [Arguments(10000000)]
-        public async Task SortFile_InMemory(int rows)
+        public async Task ExternalMergeSorter_Recursive(int rows)
         {
-            var file = File.OpenRead($"unsorted.{rows}.txt");
-            await _inMemorySortFileCommand.Execute(file);
+            var source = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
+            var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{rows}.csv");
+            await _externalMergeSortCommand.Execute(source, target);
         }
+
+        //[Benchmark(Baseline = true)]
+        //[Arguments(10)]
+        //[Arguments(100)]
+        //[Arguments(1000)]
+        //[Arguments(10000)]
+        //[Arguments(100000)]
+        //[Arguments(1000000)]
+        //[Arguments(10000000)]
+        //[GcServer(true)]
+        //public async Task InMemory_ServerGc(int rows)
+        //{
+        //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
+        //    var target = File.OpenWrite($"c:\\temp\\files\\inmemory-sorted.{rows}.csv");
+        //    await _inMemorySortCommand.Execute(source, target);
+        //}
+
+        //[Benchmark]
+        //[Arguments(10)]
+        //[Arguments(100)]
+        //[Arguments(1000)]
+        //[Arguments(10000)]
+        //[Arguments(100000)]
+        //[Arguments(1000000)]
+        //[Arguments(10000000)]
+        //[GcServer(true)]
+        //public async Task ExternalMergeSorter_ServerGc(int rows)
+        //{
+        //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{rows}.csv");
+        //    var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{rows}.csv");
+        //    await _externalMergeSortCommand.Execute(source, target);
+        //}
+
+        //[Benchmark]
+        //[Arguments(1 * 1024 * 1024)]
+        //[Arguments(2 * 1024 * 1024)]
+        //[Arguments(4 * 1024 * 1024)]
+        //[Arguments(8 * 1024 * 1024)]
+        //[Arguments(16 * 1024 * 1024)]
+        //[Arguments(32 * 1024 * 1024)]
+        //[Arguments(64 * 1024 * 1024)]
+        //[Arguments(128 * 1024 * 1024)]
+        //public async Task ChunkSize(int chunkSizeBytes)
+        //{
+        //    var command = new ExternalMergeSorter(new ExternalMergeSorterOptions
+        //    {
+        //        Split = new ExternalMergeSortSplitOptions
+        //        {
+        //            FileSize = chunkSizeBytes
+        //        }
+        //    });
+        //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");
+        //    var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{1000000}.{Guid.NewGuid()}.benchmark");
+        //    await command.Sort(source, target, CancellationToken.None);
+        //}
+
+        //[Benchmark]
+        //[Arguments(5)]
+        //[Arguments(10)]
+        //[Arguments(15)]
+        //public async Task FilesPerRun(int chunkSizeBytes)
+        //{
+        //    var command = new ExternalMergeSortFileCommand(new ExternalMergeSorterOptions
+        //    {
+        //        Split = new ExternalMergeSortSplitOptions
+        //        {
+        //            ChunkSize = 8 * 1024 * 1024
+        //        },
+        //        Merge = new ExternalMergeSortMergeOptions
+        //        {
+        //            ChunkSize = chunkSizeBytes
+        //        }
+        //    });
+        //    var source = File.OpenRead($"c:\\temp\\files\\unsorted.{1000000}.csv");
+        //    var target = File.OpenWrite($"c:\\temp\\files\\external-sorted.{1000000}.csv");
+        //    await command.Execute(source, target);
+        //}
     }
 }
