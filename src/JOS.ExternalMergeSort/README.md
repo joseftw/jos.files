@@ -26,3 +26,42 @@ var sorter = new ExternalMergeSorter(options);
 
 await sorter.Sort(unsortedFile, targetFile);
 ```
+
+It's possible to pass in custom ```IProgress``` handlers as well.
+```csharp
+var splitFileProgressHandler = new Progress<double>(x =>
+{
+    var percentage = x * 100;
+    System.Console.WriteLine($"Split progress: {percentage:##.##}%");
+});
+var sortFilesProgressHandler = new Progress<double>(x =>
+{
+    var percentage = x * 100;
+    System.Console.WriteLine($"Sort progress: {percentage:##.##}%");
+});
+var mergeFilesProgressHandler = new Progress<double>(x =>
+{
+    var percentage = x * 100;
+    System.Console.WriteLine($"Merge progress: {percentage:##.##}%");
+});
+
+//var sortCommand = new ExternalMergeSorter(new ExternalMergeSorterOptions
+{
+    Split = new ExternalMergeSortSplitOptions
+    {
+        ProgressHandler = splitFileProgressHandler
+    },
+    Sort = new ExternalMergeSortSortOptions
+    {
+        ProgressHandler = sortFilesProgressHandler
+    },
+    Merge = new ExternalMergeSortMergeOptions
+    {
+        ProgressHandler = mergeFilesProgressHandler
+    }
+});
+
+var sourceFile = Path.Combine(FileGenerator.FileLocation, sourceFilename);
+targetFile = File.OpenWrite(Path.Combine(FileGenerator.FileLocation, $"sorted.{rows}.csv"));
+await sortCommand.Sort(File.OpenRead(sourceFile), targetFile, CancellationToken.None);
+```
