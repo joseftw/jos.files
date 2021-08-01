@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>JOS.Files.Implementations</AssemblyName>
       <LangVersion>preview</LangVersion>
+      <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

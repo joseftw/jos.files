@@ -28,7 +28,7 @@ namespace JOS.Files.Implementation.Tests
             var lines = new List<string>();
             while (!streamReader.EndOfStream)
             {
-                lines.Add(await streamReader.ReadLineAsync());
+                lines.Add((await streamReader.ReadLineAsync())!);
             }
             var sortedLines = lines.OrderBy(x => x).ToList();
 
