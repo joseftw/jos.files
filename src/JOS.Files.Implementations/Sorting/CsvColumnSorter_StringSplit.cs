@@ -45,7 +45,7 @@ namespace JOS.Files.Implementations.Sorting
             var columns = value.Split(_separator);
             if (columns.Length < _column)
             {
-                throw new Exception("boom");
+                throw new ArgumentOutOfRangeException($"Found fewer columns than expected. Actual: {columns.Length}, Expected: {_column}");
             }
 
             return columns[_column - 1];

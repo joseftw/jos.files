@@ -62,34 +62,16 @@ namespace JOS.Files.Implementation.Tests
         public void ShouldSortArrayInAscendingOrder(Type sutType)
         {
             var sut = (IComparer<string>)Activator.CreateInstance(sutType, args: new object[] { Column, Separator })!;
-            var rows = new[] { _unsortedRows.Row3, _unsortedRows.Row2, _unsortedRows.Row1 };
+            var rows = new string[_unsortedRows.Count];
+            _unsortedRows.CopyTo(rows);
 
             Array.Sort(rows, sut);
 
             rows[0].ShouldBe(_unsortedRows.Row1); // Abernathy
             rows[1].ShouldBe(_unsortedRows.Row3); // Brown
             rows[2].ShouldBe(_unsortedRows.Row2); // Homenick
+            rows[3].ShouldBe(_unsortedRows.Row4); // Schneider
+            rows[4].ShouldBe(_unsortedRows.Row5); // Wolf
         }
     }
-
-    //public class CsvColumnSorter_StringSplitTests : CsvColumnSorterTests
-    //{
-    //    public CsvColumnSorter_StringSplitTests() : base(new CsvColumnSorter_StringSplit(Column))
-    //    {
-    //    }
-    //}
-
-    //public class CsvColumnSorter_SubstringTests : CsvColumnSorterTests
-    //{
-    //    public CsvColumnSorter_SubstringTests() : base(new CsvColumnSorter_Substring(Column))
-    //    {
-    //    }
-    //}
-
-    //public class CsvColumnSorter_SpanTests : CsvColumnSorterTests
-    //{
-    //    public CsvColumnSorter_SpanTests() : base(new CsvColumnSorter_Span(Column))
-    //    {
-    //    }
-    //}
 }

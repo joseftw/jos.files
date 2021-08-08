@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace JOS.Files.Implementations.Sorting
 {
+    /// <summary>
+    /// Don't use this code
+    /// </summary>
     public class CsvColumnSorter_Substring : IComparer<string>
     {
         private readonly int _column;
@@ -33,7 +37,7 @@ namespace JOS.Files.Implementations.Sorting
             var xColumn = GetColumnValue(x);
             var yColumn = GetColumnValue(y);
 
-            return Comparer<string>.Default.Compare(xColumn, yColumn);
+            return string.Compare(xColumn, yColumn, StringComparison.OrdinalIgnoreCase);
         }
 
         private string GetColumnValue(string value)

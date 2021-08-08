@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using JOS.ExternalMergeSort;
 using JOS.Files.Implementations.Sorting;
 
 namespace JOS.Console.Runner
@@ -10,7 +12,7 @@ namespace JOS.Console.Runner
         public static async Task Main(string[] args)
         {
 
-            var rows = 100_000_000;
+            var rows = 10_000_000;
             var sourceFilename = $"unsorted.{rows}.csv";
             var unsortedFilePath = Path.Combine(FileGenerator.FileLocation, sourceFilename);
             if (!File.Exists(unsortedFilePath))
@@ -20,12 +22,19 @@ namespace JOS.Console.Runner
                 System.Console.WriteLine($"{sourceFilename} has been created");
             }
 
-            var command = new ExternalMergeSortCommand();
-            var commandName = command.GetType().Name;
+            var comparer = new CsvColumnSorter_Substring(2);
+            var command = new ExternalMergeSorter(new ExternalMergeSorterOptions
+            {
+                Sort = new ExternalMergeSortSortOptions
+                {
+                    Comparer = comparer
+                }
+            });
+            var commandName = comparer.GetType().Name;
             var sourceFile = File.OpenRead(Path.Combine(FileGenerator.FileLocation, sourceFilename));
             var targetFile = File.OpenWrite(Path.Combine(FileGenerator.FileLocation, $"{commandName}.{rows}.csv".ToLower()));
             var stopwatch = Stopwatch.StartNew();
-            await command.Execute(sourceFile, targetFile);
+            await command.Sort(sourceFile, targetFile, CancellationToken.None);
             stopwatch.Stop();
             System.Console.WriteLine($"{commandName} done, took {stopwatch.Elapsed}");
 
