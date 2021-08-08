@@ -11,7 +11,7 @@ namespace JOS.Files.Implementations.Sorting
     public static class FileGenerator
     {
         public static string FileLocation = "c:\\temp\\files";
-        private static Faker<User> _userGenerator;
+        private static Faker<User> _userGenerator = null!;
 
         public static async Task<string> CreateFile(int rows, string location = "", bool overwrite = false)
         {
@@ -54,14 +54,14 @@ namespace JOS.Files.Implementations.Sorting
 
     public class User
     {
-        public string Firstname { get; set; }
-        public string Lastname { get; set; }
+        public string Firstname { get; set; } = null!;
+        public string Lastname { get; set; } = null!;
         public string FullName => $"{Firstname} {Lastname}";
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string SomethingUnique { get; set; }
+        public string Username { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public string SomethingUnique { get; set; } = null!;
         public Guid SomeGuid { get; set; }
-        public string Avatar { get; set; }
+        public string Avatar { get; set; } = null!;
     }
 
     public class UserMap : ClassMap<User>

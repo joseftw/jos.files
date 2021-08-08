@@ -26,6 +26,7 @@ namespace JOS.ExternalMergeSort
             _totalFilesToMerge = 0;
             _mergeFilesProcessed = 0;
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _unsortedRows = Array.Empty<string>();
         }
 
         public async Task Sort(Stream source, Stream target, CancellationToken cancellationToken)
@@ -152,11 +153,12 @@ namespace JOS.ExternalMergeSort
             var counter = 0;
             while (!streamReader.EndOfStream)
             {
-                _unsortedRows[counter++] = await streamReader.ReadLineAsync();
+                _unsortedRows[counter++] = (await streamReader.ReadLineAsync())!;
             }
 
             Array.Sort(_unsortedRows, _options.Sort.Comparer);
             await using var streamWriter = new StreamWriter(target, bufferSize: _options.Sort.OutputBufferSize);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             foreach (var row in _unsortedRows.Where(x => x != null))
             {
                 await streamWriter.WriteLineAsync(row);
@@ -241,7 +243,7 @@ namespace JOS.ExternalMergeSort
                 }
 
                 var value = await streamReaders[streamReaderIndex].ReadLineAsync();
-                rows[0] = new Row { Value = value, StreamReader = streamReaderIndex };
+                rows[0] = new Row { Value = value!, StreamReader = streamReaderIndex };
             }
 
             CleanupRun(streamReaders, filesToMerge);
@@ -266,7 +268,7 @@ namespace JOS.ExternalMergeSort
                 var value = await streamReaders[i].ReadLineAsync();
                 var row = new Row
                 {
-                    Value = value,
+                    Value = value!,
                     StreamReader = i
                 };
                 rows.Add(row);

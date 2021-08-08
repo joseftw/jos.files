@@ -14,7 +14,7 @@ namespace JOS.Files.Implementations.Sorting
             var lines = new List<string>();
             while (!streamReader.EndOfStream)
             {
-                lines.Add(await streamReader.ReadLineAsync());
+                lines.Add((await streamReader.ReadLineAsync())!);
             }
 
             await using var streamWriter = new StreamWriter(target);

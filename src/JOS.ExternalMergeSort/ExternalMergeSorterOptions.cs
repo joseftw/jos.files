@@ -25,7 +25,7 @@ namespace JOS.ExternalMergeSort
         /// </summary>
         public int FileSize { get; init; } = 2 * 1024 * 1024;
         public char NewLineSeparator { get; init; } = '\n';
-        public IProgress<double> ProgressHandler { get; init; }
+        public IProgress<double> ProgressHandler { get; init; } = null!;
     }
 
     public class ExternalMergeSortSortOptions
@@ -33,7 +33,7 @@ namespace JOS.ExternalMergeSort
         public IComparer<string> Comparer { get; init; } = Comparer<string>.Default;
         public int InputBufferSize { get; init; } = 65536;
         public int OutputBufferSize { get; init; } = 65536;
-        public IProgress<double> ProgressHandler { get; init; }
+        public IProgress<double> ProgressHandler { get; init; } = null!;
     }
 
     public class ExternalMergeSortMergeOptions
@@ -50,7 +50,8 @@ namespace JOS.ExternalMergeSort
         /// Buffer size (in bytes) for output StreamWriter
         /// </summary>
         public int OutputBufferSize { get; init; } = 65536;
-        public IProgress<double> ProgressHandler { get; init; }
+
+        public IProgress<double> ProgressHandler { get; init; } = null!;
     }
 
 }
