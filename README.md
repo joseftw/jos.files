@@ -13,3 +13,6 @@ https://josef.codes/efficient-file-uploads-with-dotnet/
 [Code](https://github.com/joseftw/jos.files/blob/develop/src/JOS.Files.Implementations/Sorting/CsvColumnSorter_Span.cs)
 
 [Read more](https://josef.codes/sorting-large-csv-files-by-column-using-csharp/)
+
+### External Merge Sort - Multiple CSV Columns
+[Read more](https://josef.codes/sorting-large-csv-files-by-multiple-columns-using-c-sharp/)
