@@ -14,7 +14,8 @@ namespace JOS.Files.Benchmarks
             //await FileGenerator.CreateFile(1000000);
             //await FileGenerator.CreateFile(10000000);
 
-            var summary = BenchmarkRunner.Run<CsvColumnSorterBenchmark>();
+            var csvColumnSorterBenchmark = BenchmarkRunner.Run<CsvColumnSorterBenchmark>();
+            var csvMultipleColumnSorterBenchmark = BenchmarkRunner.Run<CsvMultipleColumnSorterBenchmark>();
         }
     }
 }

@@ -3,6 +3,8 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
+      <langversion>latest</langversion>
+      <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     </PropertyGroup>
 
 </Project>
