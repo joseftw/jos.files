@@ -37,6 +37,7 @@ namespace JOS.ExternalMergeSort
             {
                 var unsortedFilePath = Path.Combine(_options.FileLocation, files.First());
                 await SortFile(File.OpenRead(unsortedFilePath), target);
+                File.Delete(unsortedFilePath);
                 return;
             }
             var sortedFiles = await SortFiles(files);
