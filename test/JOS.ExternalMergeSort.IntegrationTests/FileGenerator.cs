@@ -6,11 +6,11 @@ using Bogus;
 using CsvHelper;
 using CsvHelper.Configuration;
 
-namespace JOS.Files.Implementations.Sorting
+namespace JOS.ExternalMergeSort.IntegrationTests
 {
     public static class FileGenerator
     {
-        public static string FileLocation = "c:\\temp\\files";
+        public static readonly string FileLocation = Path.Combine("Resources", "temp", "files");
         private static Faker<User> _userGenerator = null!;
 
         public static async Task<string> CreateFile(int rows, string location = "", bool overwrite = false)
@@ -37,8 +37,12 @@ namespace JOS.Files.Implementations.Sorting
 
             Console.WriteLine($"Creating {path}...");
             await using var writer = new StreamWriter(path, append: false);
-            await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-
+            var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                NewLine = Environment.NewLine,
+            };
+            await using var csv = new CsvWriter(writer, csvConfiguration);
+            csv.Context.RegisterClassMap<UserMap>();
             for (int i = 0; i < rows; i++)
             {
                 csv.WriteRecord(_userGenerator.Generate());
@@ -68,14 +72,14 @@ namespace JOS.Files.Implementations.Sorting
     {
         public UserMap()
         {
-            Map(x => x.Firstname).Index(1).Name("Firstname");
-            Map(x => x.Lastname).Index(0).Name("Lastname");
-            Map(x => x.FullName).Index(0).Name("Fullname");
-            Map(x => x.Avatar).Index(0).Name("Avatar");
-            Map(x => x.Username).Index(0).Name("Username");
-            Map(x => x.Email).Index(0).Name("Email");
-            Map(x => x.SomethingUnique).Index(0).Name("SomethingUnique");
-            Map(x => x.SomeGuid).Index(0).Name("SomeGuid");
+            Map(x => x.Firstname).Name("Firstname");
+            Map(x => x.Lastname).Name("Lastname");
+            Map(x => x.FullName).Name("Fullname");
+            Map(x => x.Avatar).Name("Avatar");
+            Map(x => x.Username).Name("Username");
+            Map(x => x.Email).Name("Email");
+            Map(x => x.SomethingUnique).Name("SomethingUnique");
+            Map(x => x.SomeGuid).Name("SomeGuid");
         }
     }
 }

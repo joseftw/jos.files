@@ -20,6 +20,7 @@ namespace JOS.Files.Benchmarks
         public CsvMultipleColumnSorterBenchmark()
         {
             var columns = new List<int> { 1, 3, 5 };
+            _rows = Array.Empty<string>();
             _unsortedRows = new UnsortedRows();
             _stringSplitSorter = new CsvMultipleColumnSorter_StringSplit(columns);
             _substringSorter = new CsvMultipleColumnSorter_Substring(columns);

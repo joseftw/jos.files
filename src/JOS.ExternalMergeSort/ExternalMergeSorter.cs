@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -108,7 +107,7 @@ namespace JOS.ExternalMergeSort
 
                     var filename = $"{++currentFile}.unsorted";
                     await using var unsortedFile = File.Create(Path.Combine(_options.FileLocation, filename));
-                    await unsortedFile.WriteAsync(buffer, 0, runBytesRead, cancellationToken);
+                    await unsortedFile.WriteAsync(buffer.AsMemory(0, runBytesRead), cancellationToken);
                     if (extraBuffer.Count > 0)
                     {
                         totalRows++;
@@ -159,7 +158,8 @@ namespace JOS.ExternalMergeSort
             Array.Sort(_unsortedRows, _options.Sort.Comparer);
             await using var streamWriter = new StreamWriter(target, bufferSize: _options.Sort.OutputBufferSize);
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            foreach (var row in _unsortedRows.Where(x => x != null))
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            foreach (var row in _unsortedRows.Where(x => x is not null))
             {
                 await streamWriter.WriteLineAsync(row);
             }
@@ -167,7 +167,8 @@ namespace JOS.ExternalMergeSort
             Array.Clear(_unsortedRows, 0, _unsortedRows.Length);
         }
 
-        private async Task MergeFiles(IReadOnlyList<string> sortedFiles, Stream target, CancellationToken cancellationToken)
+        private async Task MergeFiles(
+            IReadOnlyList<string> sortedFiles, Stream target, CancellationToken cancellationToken)
         {
             var done = false;
             while (!done)
@@ -181,7 +182,8 @@ namespace JOS.ExternalMergeSort
                     return;
                 }
 
-                // TODO better logic when chunking, we don't want to have 1 chunk of 10 and 1 of 1 for example, better to spread it out.
+                // TODO better logic when chunking
+                // we don't want to have 1 chunk of 10 and 1 of 1 for example, better to spread it out.
                 var runs = sortedFiles.Chunk(runSize);
                 var chunkCounter = 0;
                 foreach (var files in runs)
@@ -189,13 +191,20 @@ namespace JOS.ExternalMergeSort
                     var outputFilename = $"{++chunkCounter}{SortedFileExtension}{TempFileExtension}";
                     if (files.Length == 1)
                     {
-                        File.Move(GetFullPath(files.First()), GetFullPath(outputFilename.Replace(TempFileExtension, string.Empty)));
+                        OverwriteTempFile(files.First(), outputFilename);
                         continue;
                     }
 
                     var outputStream = File.OpenWrite(GetFullPath(outputFilename));
                     await Merge(files, outputStream, cancellationToken);
-                    File.Move(GetFullPath(outputFilename), GetFullPath(outputFilename.Replace(TempFileExtension, string.Empty)), true);
+                    OverwriteTempFile(outputFilename, outputFilename);
+                    
+                    void OverwriteTempFile(string from, string to)
+                    {
+                        File.Move(
+                            GetFullPath(from),
+                            GetFullPath(to.Replace(TempFileExtension, string.Empty)), true);
+                    }
                 }
 
                 sortedFiles = Directory.GetFiles(_options.FileLocation, $"*{SortedFileExtension}")
@@ -242,7 +251,7 @@ namespace JOS.ExternalMergeSort
                     continue;
                 }
 
-                var value = await streamReaders[streamReaderIndex].ReadLineAsync();
+                var value = await streamReaders[streamReaderIndex].ReadLineAsync(cancellationToken);
                 rows[0] = new Row { Value = value!, StreamReader = streamReaderIndex };
             }
 
@@ -291,7 +300,7 @@ namespace JOS.ExternalMergeSort
             {
                 streamReaders[i].Dispose();
                 // RENAME BEFORE DELETION SINCE DELETION OF LARGE FILES CAN TAKE SOME TIME
-                // WE DONT WANT TO CLASH WHEN WRITING NEW FILES.
+                // WE DON'T WANT TO CLASH WHEN WRITING NEW FILES.
                 var temporaryFilename = $"{filesToMerge[i]}.removal";
                 File.Move(GetFullPath(filesToMerge[i]), GetFullPath(temporaryFilename));
                 File.Delete(GetFullPath(temporaryFilename));
@@ -300,7 +309,7 @@ namespace JOS.ExternalMergeSort
 
         private string GetFullPath(string filename)
         {
-            return Path.Combine(_options.FileLocation, filename);
+            return Path.Combine(_options.FileLocation, Path.GetFileName(filename));
         }
     }
 }

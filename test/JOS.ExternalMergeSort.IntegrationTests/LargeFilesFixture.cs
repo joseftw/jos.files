@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using JOS.Files.Implementations.Sorting;
-using Xunit;
+﻿using System.Threading.Tasks;
 
 namespace JOS.ExternalMergeSort.IntegrationTests
 {

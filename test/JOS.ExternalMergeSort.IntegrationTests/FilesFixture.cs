@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using JOS.Files.Implementations.Sorting;
 using Xunit;
 
 namespace JOS.ExternalMergeSort.IntegrationTests
@@ -12,7 +11,8 @@ namespace JOS.ExternalMergeSort.IntegrationTests
         public FilesFixture(int[] rows)
         {
             // ReSharper disable once PossibleNullReferenceException
-            OutputDirectory = Directory.GetParent(typeof(ExternalMergeSort_SmallFiles_IntegrationTests).Assembly.Location).FullName;
+            OutputDirectory =
+                Directory.GetParent(typeof(ExternalMergeSort_SmallFiles_IntegrationTests).Assembly.Location)!.FullName;
             FilesDirectory = FileGenerator.FileLocation;
             Rows = rows ?? throw new ArgumentNullException(nameof(rows));
             UnsortedFiles = new Dictionary<int, string>();

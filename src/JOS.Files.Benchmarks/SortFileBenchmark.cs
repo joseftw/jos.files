@@ -1,10 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Threading;
+﻿using System.IO;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using JOS.ExternalMergeSort;
 using JOS.Files.Implementations.Sorting;
 
 namespace JOS.Files.Benchmarks

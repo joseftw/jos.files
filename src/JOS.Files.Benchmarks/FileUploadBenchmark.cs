@@ -12,10 +12,10 @@ namespace JOS.Files.Benchmarks
     [HtmlExporter]
     public class FileUploadBenchmark
     {
-        private UploadFileLocalCommand_String _uploadFileLocalCommandString;
-        private UploadFileLocalCommand_Bytes _uploadFileLocalCommandBytes;
-        private UploadFileLocalCommand_Stream _uploadFileLocalCommandStream;
-        private UploadFileBonusCommandAzure _uploadFileBonusCommandAzure;
+        private UploadFileLocalCommand_String _uploadFileLocalCommandString = null!;
+        private UploadFileLocalCommand_Bytes _uploadFileLocalCommandBytes = null!;
+        private UploadFileLocalCommand_Stream _uploadFileLocalCommandStream = null!;
+        private UploadFileBonusCommandAzure _uploadFileBonusCommandAzure = null!;
 
         [GlobalSetup]
         public void GlobalSetup()
