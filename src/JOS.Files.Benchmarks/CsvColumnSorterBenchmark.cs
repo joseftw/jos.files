@@ -6,8 +6,7 @@ using JOS.Files.Implementations.Sorting;
 namespace JOS.Files.Benchmarks
 {
     [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.Net70)]
-    [HtmlExporter]
+    [SimpleJob(RuntimeMoniker.Net80)]
     public class CsvColumnSorterBenchmark
     {
         private string[] _rows;
@@ -15,7 +14,7 @@ namespace JOS.Files.Benchmarks
         private readonly CsvColumnSorter_StringSplit _stringSplitSorter;
         private readonly CsvColumnSorter_Substring _substringSorter;
         private readonly CsvColumnSorter_Span _spanSorter;
-        
+
         public CsvColumnSorterBenchmark()
         {
             var column = 2;

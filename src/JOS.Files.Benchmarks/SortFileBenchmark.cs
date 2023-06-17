@@ -7,7 +7,7 @@ using JOS.Files.Implementations.Sorting;
 namespace JOS.Files.Benchmarks
 {
     [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [HtmlExporter]
     public class SortFileBenchmark
     {

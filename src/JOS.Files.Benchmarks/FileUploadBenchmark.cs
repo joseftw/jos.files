@@ -8,14 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace JOS.Files.Benchmarks
 {
     [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.Net50, invocationCount: 2, warmupCount: 2, targetCount: 2, launchCount: 2)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [HtmlExporter]
     public class FileUploadBenchmark
     {
         private UploadFileLocalCommand_String _uploadFileLocalCommandString = null!;
         private UploadFileLocalCommand_Bytes _uploadFileLocalCommandBytes = null!;
         private UploadFileLocalCommand_Stream _uploadFileLocalCommandStream = null!;
-        private UploadFileBonusCommandAzure _uploadFileBonusCommandAzure = null!;
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -32,7 +31,6 @@ namespace JOS.Files.Benchmarks
             _uploadFileLocalCommandString = serviceProvider.GetRequiredService<UploadFileLocalCommand_String>();
             _uploadFileLocalCommandBytes = serviceProvider.GetRequiredService<UploadFileLocalCommand_Bytes>();
             _uploadFileLocalCommandStream = serviceProvider.GetRequiredService<UploadFileLocalCommand_Stream>();
-            _uploadFileBonusCommandAzure = serviceProvider.GetRequiredService<UploadFileBonusCommandAzure>();
         }
 
         [Benchmark]
@@ -67,16 +65,5 @@ namespace JOS.Files.Benchmarks
             var result = await _uploadFileLocalCommandStream.UploadFile(filename);
             return result;
         }
-
-        //[Benchmark]
-        //[Arguments("1MB.test")]
-        //[Arguments("10MB.test")]
-        //[Arguments("100MB.test")]
-        //[Arguments("1000MB.test")]
-        //public async Task<HttpStatusCode> UploadFile_Azure(string filename)
-        //{
-        //    var result = await _uploadFileBonusCommandAzure.UploadFile(filename);
-        //    return result;
-        //}
     }
 }
