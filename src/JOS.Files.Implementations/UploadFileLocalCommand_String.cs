@@ -27,9 +27,7 @@ public class UploadFileLocalCommand_String : IUploadFileCommand
             Content = content
         };
 
-        using (var response = await _httpClient.SendAsync(request))
-        {
-            return response.StatusCode;
-        }
+        using var response = await _httpClient.SendAsync(request);
+        return response.StatusCode;
     }
 }

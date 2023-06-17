@@ -12,7 +12,7 @@ public class FilesController : ControllerBase
     public async Task<IActionResult> Upload(string filename)
     {
         var filePath = Path.Combine("c:\\", "temp", filename);
-        using (var fileStream = new FileStream(filePath, FileMode.Create))
+        await using (var fileStream = new FileStream(filePath, FileMode.Create))
         {
             await Request.Body.CopyToAsync(fileStream);
         }

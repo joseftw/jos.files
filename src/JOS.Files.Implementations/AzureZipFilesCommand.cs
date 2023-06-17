@@ -13,24 +13,20 @@ public class AzureZipFilesCommand : IZipFilesCommand
     {
         var containerName = "fileupload";
 
-        using (var targetStream = File.Create(Path.Combine(Config.DownloadFilesAbsolutePath, "files.zip")))
+        await using var targetStream = File.Create(Path.Combine(Config.DownloadFilesAbsolutePath, "files.zip"));
+        await using var zipOutputStream = new ZipOutputStream(targetStream);
+        foreach (var filename in filenames)
         {
-            using (var zipOutputStream = new ZipOutputStream(targetStream))
+            var entry = new ZipEntry(filename)
             {
-                foreach (var filename in filenames)
-                {
-                    var entry = new ZipEntry(filename)
-                    {
-                        DateTime = DateTime.UtcNow,
-                    };
-                    zipOutputStream.PutNextEntry(entry);
-                    var blobClient = new BlobClient(connectionString: Config.AzureStorageConnectionString, blobContainerName: containerName, blobName: filename);
-                    await blobClient.DownloadToAsync(zipOutputStream);
-                    await targetStream.FlushAsync();
-                }
-                zipOutputStream.Finish();
-                zipOutputStream.Close();
-            }
+                DateTime = DateTime.UtcNow,
+            };
+            zipOutputStream.PutNextEntry(entry);
+            var blobClient = new BlobClient(connectionString: Config.AzureStorageConnectionString, blobContainerName: containerName, blobName: filename);
+            await blobClient.DownloadToAsync(zipOutputStream);
+            await targetStream.FlushAsync();
         }
+        zipOutputStream.Finish();
+        zipOutputStream.Close();
     }
 }

@@ -40,9 +40,9 @@ public class AzureBlobStorageCreateZipFileCommand : ICreateZipFileCommand
 
         try
         {
-            using (var zipFileStream = await OpenZipFileStream(zipFileName, cancellationToken))
+            await using (var zipFileStream = await OpenZipFileStream(zipFileName, cancellationToken))
             {
-                using (var zipFileOutputStream = CreateZipOutputStream(zipFileStream))
+                await using (var zipFileOutputStream = CreateZipOutputStream(zipFileStream))
                 {
                     var level = 0;
                     _logger.LogInformation("Using Level {Level} compression", level);

@@ -19,17 +19,13 @@ public class UploadFileLocalCommand_Stream : IUploadFileCommand
     public async Task<HttpStatusCode> UploadFile(string filename)
     {
         // DO THIS
-        using (var file = File.OpenRead(Path.Combine(Config.ExampleFilesAbsolutePath, filename)))
+        await using var file = File.OpenRead(Path.Combine(Config.ExampleFilesAbsolutePath, filename));
+        var content = new StreamContent(file);
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/files/{filename}.stream")
         {
-            var content = new StreamContent(file);
-            var request = new HttpRequestMessage(HttpMethod.Post, $"/files/{filename}.stream")
-            {
-                Content = content
-            };
-            using (var response = await _httpClient.SendAsync(request))
-            {
-                return response.StatusCode;
-            }
-        }
+            Content = content
+        };
+        using var response = await _httpClient.SendAsync(request);
+        return response.StatusCode;
     }
 }

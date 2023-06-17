@@ -23,15 +23,11 @@ public class UploadFileBonusCommandAzure : IUploadFileCommand
         var blob = await blobClient.DownloadAsync();
         var content = new StreamContent(blob.Value.Content);
 
-        using (var request = new HttpRequestMessage(HttpMethod.Post, $"/files/{filename}.stream.azure")
-               {
-                   Content = content
-               })
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/files/{filename}.stream.azure")
         {
-            using (var response = await _httpClient.SendAsync(request))
-            {
-                return response.StatusCode;
-            }
-        }
+            Content = content
+        };
+        using var response = await _httpClient.SendAsync(request);
+        return response.StatusCode;
     }
 }
