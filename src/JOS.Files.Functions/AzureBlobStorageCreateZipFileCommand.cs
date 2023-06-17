@@ -10,91 +10,90 @@ using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace JOS.Files.Functions
-{
-    public class AzureBlobStorageCreateZipFileCommand : ICreateZipFileCommand
-    {
-        private readonly UploadProgressHandler _uploadProgressHandler;
-        private readonly ILogger<AzureBlobStorageCreateZipFileCommand> _logger;
-        private readonly string _storageConnectionString;
-        private readonly string _zipStorageConnectionString;
-        
-        public AzureBlobStorageCreateZipFileCommand(
-            IConfiguration configuration,
-            UploadProgressHandler uploadProgressHandler,
-            ILogger<AzureBlobStorageCreateZipFileCommand> logger)
-        {
-            _uploadProgressHandler = uploadProgressHandler ?? throw new ArgumentNullException(nameof(uploadProgressHandler));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _storageConnectionString = configuration.GetValue<string>("FilesStorageConnectionString") ?? throw new Exception("FilesStorageConnectionString was null");
-            _zipStorageConnectionString = configuration.GetValue<string>("ZipStorageConnectionString") ?? throw new Exception("ZipStorageConnectionString was null");
-        }
-        
-        public async Task Execute(
-            string containerName,
-            IReadOnlyCollection<string> filePaths,
-            CancellationToken cancellationToken)
-        {
-            var zipFileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}.{Guid.NewGuid().ToString().Substring(0, 4)}.zip";
-            var stopwatch = Stopwatch.StartNew();
+namespace JOS.Files.Functions;
 
-            try
+public class AzureBlobStorageCreateZipFileCommand : ICreateZipFileCommand
+{
+    private readonly UploadProgressHandler _uploadProgressHandler;
+    private readonly ILogger<AzureBlobStorageCreateZipFileCommand> _logger;
+    private readonly string _storageConnectionString;
+    private readonly string _zipStorageConnectionString;
+        
+    public AzureBlobStorageCreateZipFileCommand(
+        IConfiguration configuration,
+        UploadProgressHandler uploadProgressHandler,
+        ILogger<AzureBlobStorageCreateZipFileCommand> logger)
+    {
+        _uploadProgressHandler = uploadProgressHandler ?? throw new ArgumentNullException(nameof(uploadProgressHandler));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _storageConnectionString = configuration.GetValue<string>("FilesStorageConnectionString") ?? throw new Exception("FilesStorageConnectionString was null");
+        _zipStorageConnectionString = configuration.GetValue<string>("ZipStorageConnectionString") ?? throw new Exception("ZipStorageConnectionString was null");
+    }
+        
+    public async Task Execute(
+        string containerName,
+        IReadOnlyCollection<string> filePaths,
+        CancellationToken cancellationToken)
+    {
+        var zipFileName = $"{DateTime.UtcNow:yyyyMMddHHmmss}.{Guid.NewGuid().ToString().Substring(0, 4)}.zip";
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            using (var zipFileStream = await OpenZipFileStream(zipFileName, cancellationToken))
             {
-                using (var zipFileStream = await OpenZipFileStream(zipFileName, cancellationToken))
+                using (var zipFileOutputStream = CreateZipOutputStream(zipFileStream))
                 {
-                    using (var zipFileOutputStream = CreateZipOutputStream(zipFileStream))
+                    var level = 0;
+                    _logger.LogInformation("Using Level {Level} compression", level);
+                    zipFileOutputStream.SetLevel(level);
+                    foreach (var filePath in filePaths)
                     {
-                        var level = 0;
-                        _logger.LogInformation("Using Level {Level} compression", level);
-                        zipFileOutputStream.SetLevel(level);
-                        foreach (var filePath in filePaths)
+                        var blockBlobClient = new BlockBlobClient(_storageConnectionString, containerName, filePath);
+                        var properties = await blockBlobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
+                        var zipEntry = new ZipEntry(blockBlobClient.Name)
                         {
-                            var blockBlobClient = new BlockBlobClient(_storageConnectionString, containerName, filePath);
-                            var properties = await blockBlobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
-                            var zipEntry = new ZipEntry(blockBlobClient.Name)
-                            {
-                                Size = properties.Value.ContentLength
-                            };
-                            zipFileOutputStream.PutNextEntry(zipEntry);
-                            await blockBlobClient.DownloadToAsync(zipFileOutputStream, cancellationToken);
-                            zipFileOutputStream.CloseEntry();
-                        }
+                            Size = properties.Value.ContentLength
+                        };
+                        zipFileOutputStream.PutNextEntry(zipEntry);
+                        await blockBlobClient.DownloadToAsync(zipFileOutputStream, cancellationToken);
+                        zipFileOutputStream.CloseEntry();
                     }
                 }
+            }
 
-                stopwatch.Stop();
-                _logger.LogInformation("[{ZipFileName}] DONE, took {ElapsedTime}", zipFileName, stopwatch.Elapsed);
-            }
-            catch (TaskCanceledException)
-            {
-                var blockBlobClient = new BlockBlobClient(_zipStorageConnectionString, "zips", zipFileName);
-                await blockBlobClient.DeleteIfExistsAsync();
-                throw;
-            }
+            stopwatch.Stop();
+            _logger.LogInformation("[{ZipFileName}] DONE, took {ElapsedTime}", zipFileName, stopwatch.Elapsed);
         }
-
-        private async Task<Stream> OpenZipFileStream(
-            string zipFilename,
-            CancellationToken cancellationToken)
+        catch (TaskCanceledException)
         {
-            var zipBlobClient = new BlockBlobClient(_zipStorageConnectionString, "zips", zipFilename);
+            var blockBlobClient = new BlockBlobClient(_zipStorageConnectionString, "zips", zipFileName);
+            await blockBlobClient.DeleteIfExistsAsync();
+            throw;
+        }
+    }
+
+    private async Task<Stream> OpenZipFileStream(
+        string zipFilename,
+        CancellationToken cancellationToken)
+    {
+        var zipBlobClient = new BlockBlobClient(_zipStorageConnectionString, "zips", zipFilename);
             
-            return await zipBlobClient.OpenWriteAsync(true, options: new BlockBlobOpenWriteOptions
-            {
-                ProgressHandler = _uploadProgressHandler,
-                HttpHeaders = new BlobHttpHeaders
-                {
-                    ContentType = "application/zip"
-                }
-            }, cancellationToken: cancellationToken);
-        }
-
-        private static ZipOutputStream CreateZipOutputStream(Stream zipFileStream)
+        return await zipBlobClient.OpenWriteAsync(true, options: new BlockBlobOpenWriteOptions
         {
-            return new ZipOutputStream(zipFileStream)
+            ProgressHandler = _uploadProgressHandler,
+            HttpHeaders = new BlobHttpHeaders
             {
-                IsStreamOwner = false
-            };
-        }
+                ContentType = "application/zip"
+            }
+        }, cancellationToken: cancellationToken);
+    }
+
+    private static ZipOutputStream CreateZipOutputStream(Stream zipFileStream)
+    {
+        return new ZipOutputStream(zipFileStream)
+        {
+            IsStreamOwner = false
+        };
     }
 }

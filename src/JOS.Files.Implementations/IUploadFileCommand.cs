@@ -1,10 +1,9 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
 
-namespace JOS.Files.Implementations
+namespace JOS.Files.Implementations;
+
+public interface IUploadFileCommand
 {
-    public interface IUploadFileCommand
-    {
-        Task<HttpStatusCode> UploadFile(string filename);
-    }
+    Task<HttpStatusCode> UploadFile(string filename);
 }

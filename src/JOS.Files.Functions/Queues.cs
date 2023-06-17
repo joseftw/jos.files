@@ -1,7 +1,6 @@
-﻿namespace JOS.Files.Functions
+﻿namespace JOS.Files.Functions;
+
+internal static class Queues
 {
-    internal static class Queues
-    {
-        internal const string CreateZipFile = "create-zip-files";
-    }
+    internal const string CreateZipFile = "create-zip-files";
 }

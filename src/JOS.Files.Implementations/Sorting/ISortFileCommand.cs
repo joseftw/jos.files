@@ -2,10 +2,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JOS.Files.Implementations.Sorting
+namespace JOS.Files.Implementations.Sorting;
+
+public interface ISortFileCommand
 {
-    public interface ISortFileCommand
-    {
-        Task Execute(Stream source, Stream target, CancellationToken cancellationToken = default);
-    }
+    Task Execute(Stream source, Stream target, CancellationToken cancellationToken = default);
 }

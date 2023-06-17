@@ -2,10 +2,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JOS.Files.Functions
+namespace JOS.Files.Functions;
+
+public interface ICreateZipFileCommand
 {
-    public interface ICreateZipFileCommand
-    {
-        Task Execute(string containerName, IReadOnlyCollection<string> filePaths, CancellationToken cancellationToken);
-    }
+    Task Execute(string containerName, IReadOnlyCollection<string> filePaths, CancellationToken cancellationToken);
 }

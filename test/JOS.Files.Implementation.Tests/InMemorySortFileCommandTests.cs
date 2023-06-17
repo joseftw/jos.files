@@ -6,44 +6,43 @@ using JOS.Files.Implementations.Sorting;
 using Shouldly;
 using Xunit;
 
-namespace JOS.Files.Implementation.Tests
+namespace JOS.Files.Implementation.Tests;
+
+public class InMemorySortFileCommandTests : IAsyncLifetime
 {
-    public class InMemorySortFileCommandTests : IAsyncLifetime
+    private readonly InMemorySortCommand _sut;
+
+    public InMemorySortFileCommandTests()
     {
-        private readonly InMemorySortCommand _sut;
+        _sut = new InMemorySortCommand();
+    }
 
-        public InMemorySortFileCommandTests()
+    [Fact]
+    public async Task ShouldSortFileInAscendingOrder()
+    {
+        var source = File.OpenRead("unsorted.txt");
+        var target = File.OpenWrite("sorted.txt");
+
+        await _sut.Execute(source, target);
+        using var streamReader = new StreamReader(File.OpenRead("sorted.txt"));
+        var lines = new List<string>();
+        while (!streamReader.EndOfStream)
         {
-            _sut = new InMemorySortCommand();
+            lines.Add((await streamReader.ReadLineAsync())!);
         }
+        var sortedLines = lines.OrderBy(x => x).ToList();
 
-        [Fact]
-        public async Task ShouldSortFileInAscendingOrder()
-        {
-            var source = File.OpenRead("unsorted.txt");
-            var target = File.OpenWrite("sorted.txt");
+        sortedLines.ShouldBeEquivalentTo(lines);
+    }
 
-            await _sut.Execute(source, target);
-            using var streamReader = new StreamReader(File.OpenRead("sorted.txt"));
-            var lines = new List<string>();
-            while (!streamReader.EndOfStream)
-            {
-                lines.Add((await streamReader.ReadLineAsync())!);
-            }
-            var sortedLines = lines.OrderBy(x => x).ToList();
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
-            sortedLines.ShouldBeEquivalentTo(lines);
-        }
-
-        public Task InitializeAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task DisposeAsync()
-        {
-            File.Delete("sorted.txt");
-            return Task.CompletedTask;
-        }
+    public Task DisposeAsync()
+    {
+        File.Delete("sorted.txt");
+        return Task.CompletedTask;
     }
 }

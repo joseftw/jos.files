@@ -3,29 +3,28 @@ using System.Threading.Tasks;
 using JOS.Files.Implementations;
 using Xunit;
 
-namespace JOS.Files.Implementation.Tests
+namespace JOS.Files.Implementation.Tests;
+
+public class AzureDownloadAndZipFilesCommandTests
 {
-    public class AzureDownloadAndZipFilesCommandTests
+    private readonly AzureZipFilesCommand _sut;
+
+    public AzureDownloadAndZipFilesCommandTests()
     {
-        private readonly AzureZipFilesCommand _sut;
+        _sut = new AzureZipFilesCommand();
+    }
 
-        public AzureDownloadAndZipFilesCommandTests()
+    [Fact]
+    public async Task ShouldCreateZipFileContainingAllFiles()
+    {
+        var files = new List<string>
         {
-            _sut = new AzureZipFilesCommand();
-        }
+            "1MB.test",
+            "10MB.test",
+            "100MB.test",
+            "1000MB.test",
+        };
 
-        [Fact]
-        public async Task ShouldCreateZipFileContainingAllFiles()
-        {
-            var files = new List<string>
-            {
-                "1MB.test",
-                "10MB.test",
-                "100MB.test",
-                "1000MB.test",
-            };
-
-            await _sut.Execute(files);
-        }
+        await _sut.Execute(files);
     }
 }

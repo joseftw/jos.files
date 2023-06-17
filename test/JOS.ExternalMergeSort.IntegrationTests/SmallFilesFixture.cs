@@ -1,29 +1,28 @@
 ﻿using System.Threading.Tasks;
 
-namespace JOS.ExternalMergeSort.IntegrationTests
+namespace JOS.ExternalMergeSort.IntegrationTests;
+
+public class SmallFilesFixture : FilesFixture
 {
-    public class SmallFilesFixture : FilesFixture
+    public SmallFilesFixture() : base(new[]
     {
-        public SmallFilesFixture() : base(new[]
-        {
-            100,
-            1000,
-            10000,
-            100000,
-            1000000
-        })
-        {
+        100,
+        1000,
+        10000,
+        100000,
+        1000000
+    })
+    {
            
-        }
+    }
 
-        private static bool RemoveUnsortedFilesWhenDone => false;
+    private static bool RemoveUnsortedFilesWhenDone => false;
 
-        public override async Task DisposeAsync()
+    public override async Task DisposeAsync()
+    {
+        if (RemoveUnsortedFilesWhenDone)
         {
-            if (RemoveUnsortedFilesWhenDone)
-            {
-                await base.DisposeAsync();
-            }
+            await base.DisposeAsync();
         }
     }
 }
