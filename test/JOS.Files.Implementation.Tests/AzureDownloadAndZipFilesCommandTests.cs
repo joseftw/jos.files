@@ -14,7 +14,7 @@ public class AzureDownloadAndZipFilesCommandTests
         _sut = new AzureZipFilesCommand();
     }
 
-    [Fact]
+    [Fact(Skip = "Only run manually")]
     public async Task ShouldCreateZipFileContainingAllFiles()
     {
         var files = new List<string>

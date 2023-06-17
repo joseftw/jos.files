@@ -8,9 +8,7 @@ public class LargeFilesFixture : FilesFixture
     {
         10000000,
         100000000
-    })
-    {
-    }
+    }) {}
 
     private static bool RemoveUnsortedFilesWhenDone => false;
 

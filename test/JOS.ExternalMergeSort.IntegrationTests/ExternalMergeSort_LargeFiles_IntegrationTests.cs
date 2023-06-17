@@ -19,7 +19,7 @@ public class ExternalMergeSort_LargeFiles_IntegrationTests : IClassFixture<Large
         _sut = new ExternalMergeSorter(new ExternalMergeSorterOptions { FileLocation = _fixture.FilesDirectory });
     }
 
-    [Theory]
+    [Theory(Skip = "Only run manually")]
     [InlineData(10000000)]
     [InlineData(100000000)]
     public async Task FileSortedWithExternalMergeSortCommandShouldBeIdenticalToFileSortedWithArraySort(int rows)

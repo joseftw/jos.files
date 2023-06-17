@@ -21,7 +21,7 @@ public class UploadFileLocalCommand1Tests
         _sut = serviceProvider.GetRequiredService<UploadFileLocalCommand_String>();
     }
 
-    [Theory]
+    [Theory(Skip = "Only run manually")]
     [InlineData("1MB.test")]
     [InlineData("10MB.test")]
     [InlineData("100MB.test")]

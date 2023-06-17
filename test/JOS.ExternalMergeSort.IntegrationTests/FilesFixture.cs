@@ -22,6 +22,7 @@ public class FilesFixture : IAsyncLifetime
     public string FilesDirectory { get; }
     protected int[] Rows { get; }
     public Dictionary<int, string> UnsortedFiles { get; }
+
     public virtual async Task InitializeAsync()
     {
         if (!Directory.Exists(FilesDirectory))
