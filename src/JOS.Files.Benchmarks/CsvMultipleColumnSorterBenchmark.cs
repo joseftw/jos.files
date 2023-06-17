@@ -7,8 +7,7 @@ using JOS.Files.Implementations.Sorting;
 namespace JOS.Files.Benchmarks
 {
     [MemoryDiagnoser]
-    [SimpleJob(RuntimeMoniker.Net60)]
-    [HtmlExporter]
+    [SimpleJob(RuntimeMoniker.Net80)]
     public class CsvMultipleColumnSorterBenchmark
     {
         private string[] _rows;
